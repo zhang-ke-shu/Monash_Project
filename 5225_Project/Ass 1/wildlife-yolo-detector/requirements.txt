@@ -1,7 +1,0 @@
-roboflow 
-ultralytics 
-supervision
-opencv-python
-matplotlib
-numpy
-requests
