@@ -1,0 +1,37 @@
+Week 1 Lab Important Bits:
+
+Use this Command to connect to server:
+$ ssh -i <path-to-private-key> ubuntu@<IP-address>
+
+Install Apache:
+$ sudo apt update && sudo apt install -y apache2 curl
+apt: Linux的安装程序，和pip很像
+apache2:之所以不需要提供下载地址是因为ubuntu是有内置应用商店的（当然是硬核版）
+-y:如果安装过程中有任何需要用户确认的东西(y/n)自动一律选y(curl和apache2都是)
+curl:实际上这行命令同时下载了2个软件,apache2和curl
+
+$ curl localhost
+curl:相当于浏览器打开页面，9137提过
+
+Benchmark Your Web Server
+Apache2:
+$ ab -c 100 -n 20000 -k http://localhost/
+ab是Apache benchmarking,相当于是服务器测压工具(嗯嗯，显卡也有很多benchmarking的软件...)
+-c 100:模拟有100个用户
+-n 20000:一共发送20000次http(get)请求
+-k:允许HTTP的keep-alive功能(TCP端口保持开放,允许下一次请求依然使用这个端口)
+
+Locust(功能和Apache接近，但是比apache功能更多更好)
+需要python
+安装命令
+$ python -m pip install locust
+(或者我记得我本机用的直接是pip install locust)?
+使用方法：
+1.创建locustfile.py
+2.黏贴以下内容
+from locust import HttpUser, task
+class InternetUser(HttpUser):
+    @task
+    def index(self):
+        self.client.get("/")
+3.终端运行locust或者python3 -m locust

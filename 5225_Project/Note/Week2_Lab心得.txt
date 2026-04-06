@@ -1,0 +1,122 @@
+如何使用谷歌云：
+1. 进入google cloud console(右上角)
+2. 右上角点击active cloud shell
+
+列出激活用户的指令(非必须)：
+$ gcloud auth list
+$ gcloud: google cloud
+auth: author?
+list: list
+
+可能需要用这个指令
+$ gcloud projects list   来找到你的proj名
+$ gcloud config set project {你的proj名}
+
+服务器地址（Region）:
+Western US	us-west1-a, us-west1-b
+Central US	us-central1-a, us-central1-b, us-central1-d, us-central1-f
+Eastern US	us-east1-b, us-east1-c, us-east1-d
+Western Europe	europe-west1-b, europe-west1-c, europe-west1-d
+Eastern Asia	asia-east1-a, asia-east1-b, asia-east1-c
+
+总之和Nectar不一样，设置region需要用指令
+$ gcloud config set compute/region {地区名}
+
+创建VM:
+
+In the Cloud console, on the Navigation menu (☰), click Compute Engine > VM Instances.
+
+This may take a minute to initialize for the first time.
+
+To create a new instance, click Create Instance.
+
+In the Machine configuration:
+
+Enter the values for the following fields:
+
+Field		Value	Additional Information
+Name		gcelab	Name for the VM instance
+Region		us-east4
+Zone		us-east4-a
+Series		E2	
+Machine Type	e2-medium
+
+Click OS and storage.
+
+Click Change to begin configuring your boot disk and select the values for:
+
+Operating system: Debian
+Version: Debian GNU/Linux 12 (bookworm)
+Boot disk type: Balanced persistent disk
+Size: 10 GB
+
+创建好之后在instance list里面点击SSH就可以了（会有新窗口）
+
+=== 如何安装 Nginx ===
+先update OS:
+$ sudo apt-get update
+apt-get是linux的用来安装别的软件的软件，这里是先检查更新
+
+$ sudo apt-get install -y nginx
+和上周一样，不多阐述
+
+ps auwx | grep nginx
+意义：
+ps auwx: Lists all running processes with lots of detail
+grep nginx: Filters that list to show only lines that contain the word nginx.
+
+ps: process status
+a: show processes for all users (not just your own).
+u: 'user‑oriented format' – shows extra columns like user, CPU, memory, and command.
+w: 'wide output' – allows long command lines to wrap/extend instead of being truncated.
+x: include processes that don’t have a controlling terminal (like background or daemon processes).
+|: ps auwx output -> 
+grep nginx
+
+======== FastAPI的事情 ========
+
+$ sudo apt-get install -y python3-pip  curl
+同时安装python和curl，和nginx一样
+
+$ pip3 install 'fastapi[standard]'
+用python的pip3安装fastapi
+
+但是很可能要先运行虚拟环境
+步骤如下：
+$ sudo apt-get install python3-venv
+python3-venv是python3-VirtualENVironment的简写
+
+$ mkdir ~/venv
+在根目录下创建venv文件夹
+
+$ python3 -m venv ~/venv
+在~/venv的环境下运行venv（先前安装的）
+-m的意思是把安装的venv库（我们下载安装的）以.py文件脚本的方式执行
+
+$ source ~/venv/bin/activate
+source:执行完后不更改当前目录
+~/venv/bin/activate:Runs the activation script inside the virtual environment’s bin directory.It changes your PATH so that python and pip point to the ones inside ~/venv instead of the system‑wide ones.
+
+为fastapi打开防火墙：
+$ sudo apt update
+apt是advanced package tool的意思，支持卸载安装更新软件，实际上是apt-get的上位替代（用apt-get的地方一般都能用apt）
+$ sudo apt install firewalld -y
+安装防火墙，对，linux连防火墙都没有
+$ sudo systemctl enable firewalld
+systemctl是管理系统服务的工具
+这是让系统打开防火墙
+$ sudo firewall-cmd --state
+firewall-cmd是防火墙程序的终端界面
+$ sudo firewall-cmd --permanent --zone=public --add-port=8000/tcp
+--permanent让这个规则保持记录，哪怕虚拟机停止重启（一直到虚拟机被删除为止）
+--zone=public在公开网络的规则（对应私人网络，这个window里有）
+--add-port=8000/tcp增加8000/tcp窗口
+但是和VM外部的security rule都要一起开放
+$ sudo firewall-cmd --reload
+刷新防火墙
+$ sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport 8000 -j ACCEPT
+允许外部任何ip地址的设备访问你的8000端口（9137有提）
+
+用
+$ python3 -m fastapi dev main.py --host 0.0.0.0
+跑fastapi
