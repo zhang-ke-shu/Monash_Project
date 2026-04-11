@@ -1,0 +1,183 @@
+1.设置并连接VM（见W1）
+
+2. 安装docker
+
+$ sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common lsb-release
+apt: apt和apt-get是一回事，apt是apt-get的上位替代，该死的课2个混用不如只教apt
+apt-transport-https: 一个工具，用这个工具能让你用https通道从网上安装
+ca-certificates: 一个工具，能让你上传你的数字证书，确保https通道可信任
+curl: 一个简单的终端浏览器，9137有
+gnupg: 一个工具(gpg)，也负责加密解密数字签名等
+software-properties-common: 一个工具，可以用来管理第三方软件
+lsb-release: Linux standard base release, 一个工具，能查询系统的具体配置（ubuntu版本等）
+为什么这一次需要这么先安装多杂七杂八的东西而以前安装nginx或者python3或者venv不需要？
+ - 因为Docker是ubuntu未收录的第三方软件，不像后两者
+
+$ sudo mkdir -m 0755 -p /etc/apt/keyrings
+-m: 用来设置文件夹的权限，和9137的chmod指令相同，chmod是更改已经存在的文件或者文件夹权限，-m是生成时创建权限
+0755: 权限细节,9137提过,0(无特殊权限)7(所有者:rwx)5(其余小组成员:rx)5(其余用户:rx)
+-m 0755实际上可以不用写因为系统默认就是0755，这里只是强调
+-p: 创建文件夹(如果不存在)，如果已存在则无事发生(不会报错)
+/etc/apt/keyrings: 
+  - etc(“诸如此类”,linux下大家默认用这个文件夹存放能影响全系统的配置文件)
+ - apt(advanced package tool,ubuntu会在这里存放库管理器(管理软件安装更新等))
+ - keyrings文件夹用来存放GPG(一个生成密钥，同时检测下载文件来源正当的软件)生成的密钥
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL: curl是那个终端版本的浏览器，现在在用这个浏览器下载Docker(如果把网址输入到电脑浏览器里会自动开始下载)的密钥
+ - fsSL: 实际上是4个指令
+   -f: 如果下载失败则停止，没有这个负责下载的破损密钥可能会被后半段的gpg被误保存到/etc/apt/keyrings里
+   -s: 安静的下载，不在终端显示下载进度等
+   -S: 虽然安静的下载(s)，但是如果出错则显示错误信息
+   -L: 如果https网址是一个跳转链接的话则自动跳转
+https://download.docker.com/linux/ubuntu/gpg: 下载docker(linux ubuntu版)密钥的网址
+| 将前半段curl下载到的内容(也就是那个docker密钥)作为后半段gpg的输入内容(data pipeline)
+gpg --dearmor: gpg就是第一步下载的gnupg，将ascii文本的密钥转换成二进制gpg格式的文件
+ - dearmor是de-armor的意思，移除护甲，这里的护甲是指让人可以阅读的ascii文字
+-o /etc/apt/keyrings/docker.gpg: -o是输出位置(output)，这里意思是将gpg保存为名字叫docker.gpg文件，保存在/etc/apt/keyrings/里
+我们下载的不是安装包，而只是一个docker的公共密钥，这个密钥可以用来在未来下载docker安装包时确认文件来源可信
+
+$ sudo chmod a+r /etc/apt/keyrings/docker.gpg
+chmod: 更改docker.gpg发文件权限
+a+r: 所有人(all)能有读取权限(+r)
+
+$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+按照“|”分为前后2部分
+
+“|”前
+$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+ - deb: Debian Binary Package,告诉apt去下载编译好的文件包
+ - [arch=$(dpkg --print-architecture): 告诉对面我们的系统配置(dpkg = Debian Package)
+ - signed-by=/etc/apt/keyrings/docker.gpg]: 密钥位置，用来检查确认接受的文件的确来自Docker
+ - https://download.docker.com/linux/ubuntu: 下载网址
+ - $(lsb_release -cs): Linux Standard Base, codename short
+ - stable:稳定版本，和beta版对照
+大意：从docker下载网址下载稳定版的Docker{我们的处理器配置x86/x64}{当前版本号，代号}版，用docker.gpg密钥确认来源正确
+
+“|”后
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+ - tee: T-Fitting(行业术语)，读取|前的输出，同时写入docker.list文件，同时打印至屏幕
+ - /etc/apt/sources.list.d/docker.list
+  - source.list.d: Ubuntu行业内默认存放第三方软件的文件夹
+  - docker.list: Docker本地的文件名
+ -  > /dev/null:
+  - >: 将屏幕上应该打印的内容转移到...
+  - /dev/null: 垃圾桶，也就是说屏幕不打印内容
+ 
+$ sudo apt update检查apt是不是有更新
+
+$ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+docker-ce: docker community版本后端
+docker-ce-cli: docker community版本终端(命令行系统)
+container.io: docker container相关的系统(container runtime)
+docker-buildx-plugin: DockerBuildx系统，比docker build更好
+docker-compose-plugin: 负责处理docker-compose.yml文件
+
+===Docker使用
+docker使用前需要用户有root权限
+$ sudo usermod -aG docker ${USER}
+usermod: user modify
+-aG: append Groups
+docker: docker的root组
+${USER}: 当前用户名（ubuntu)
+！改权限后记得重启才能生效！
+
+$ docker run hello-world
+docker会检查当下有没有hello-world的image，没有则会从dockerhub下载
+docker接着会为下载好的最新的helloworld准备一个新的container
+docker会在container里面跑helloworld（用于检查docker是否安装正确）
+（安装正确）docker打印相关内容，离开container
+
+docker ps -a: 展示所有的(-a)docker process status(ps)
+
+docker image list 展示本机下载的image
+
+docker pull ubuntu: 从dockerhub下载image(不run)
+
+docker run ubuntu echo "hello from ubuntu"
+
+docker run -it ubuntu bash
+-i 创建可互动的链接
+-t 创建虚拟的终端
+-d 创建终端后持续运行(run)而不是exit
+
+docker exec <container-id> 运行running的终端（而不是新建）
+docker stop <container-id> 停止running的终端（而不是新建）
+docker rm <container-id> 删除终端
+docker rm -f `docker ps -a -q` 删除所有终端
+-q的意思是只罗列id
+
+=====在container里面运行网络服务器
+
+$ docker run --name myserver -p 8080:80 -d nginx
+这里不需要apt nginx因为已经docker里面已经有了
+--name ...: 给你创建的container命名方便寻找
+-p 8080: 设置port number为8080, nginx默认是80，主机port是8080，container内部port是80
+-d: 之前说的，创建container后持续后台运行
+nginx: 和helloworld一样的image(需要去本地找或者下载)
+
+
+$  sudo mkdir -p /home/ubuntu/www && sudo chown ubuntu:ubuntu -R /home/ubuntu/www
+sudo mkdir -p /home/ubuntu/www: create a new directory /home/ubuntu/www
+sudo chown ubuntu:ubuntu -R /home/ubuntu/www: change owner to ubuntu:ubuntu
+第一步由于是在root文件夹设置的新文件，所以文件夹所有者是root
+第二部是把这个文件夹的权限设置为ubuntu(也就是用户)这样你可以创建和书写文件
+
+$ docker rm myserver -f; docker run --name myserver -p 8080:80 -d -v /home/ubuntu/www:/usr/share/nginx/html nginx
+1. 让docker删除旧的container myserver(前面创建的)
+2. 创建一个新的container叫myserver，port 8080:80
+ - -v的意思是设置你的volume，也就是说你的html文件的位置。Django里面也有
+
+====Create Docker Image
+如果要自己创建Image则需要创建dockerfile。
+
+Dockerfile的内容：
+
+FROM python:3.12-alpine #底层image是python：3.12-alpine
+WORKDIR /code           #选择docker的working directory为/code，日后所有的copy/run/cmd等指令都以code为基准
+COPY my_script.py /code #把你的my_scipt.py文件放入docker container里,也可有多种其他写法，比如
+ - COPY my_script.py
+ - COPY my_script.py my_script.py
+ - COPY my_script.py /code/my_script.py
+COPY requirements.txt requirements.txt #同上
+RUN pip install -r requirements.txt #在终端运行 pip install -r requirements.txt,注意运行的是在code里面的requirements.txt
+CMD ["python","-m","fastapi","run","/code/my_script.py"] #如果成功执行了上一步run那么执行这里的指令,后面其实是json
+
+$ docker build -t fastapi-app .
+docker创建image
+-t: tag，你的image名是fastapi-app
+
+创建好后：
+$ docker run -d -p 8000:8000 --name my-fastapi-app fastapi-app
+用curl检查
+$ curl localhost:8000
+
+=====docker compose
+
+创建compose demo
+文件夹里面是
+fastapi[standard]
+redis
+redis是一个高效字典,python脚本要用
+
+dockerfile和上面的大同小异
+RUN apk add --no-cache gcc musl-dev linux-headers
+ - apk: Apline的库安装系统
+ - add: 安装...包
+ - --no-cache: 不要缓存，节约空间
+ - gcc: 需要安装的包的名字（C语言编译器）
+ - musl-dev: c语言库
+ - linux-headers: Linux Kernel Driver
+
+还需要docker-compose.yml
+services:                 # define all container/services
+  web:                    # service name 1: "web" (fastapi)
+    build: .		  # build from current directory '.'
+    ports:		  
+      - "8000:8000"	  # Host port: 8000, internal container port: 8000
+  redis:		  # service name 2: "redis"
+    image: "redis:alpine" # pull official Redis Alpine image,之所以web不需要image是因为image在本地（也就是build那一行）
+
+$ docker compose up -d
+必须要在.yml文件的同一位置使用，按照yml指令开启所有service

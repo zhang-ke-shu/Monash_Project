@@ -1,0 +1,187 @@
+第一步，安装Docker
+(上周内容所以跳过)
+
+第二部，安装cri-dockerd apapter
+kubernetes官方不再支持docker了，所以要第三方适配工具
+
+$ wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd_0.3.16.3-0.ubuntu-jammy_amd64.deb
+用wget从指定链接下载安装包文件到当前位置，实际上应该是wget (-P 下载位置) 网址，括号内可以省略 
+
+$ sudo dpkg -i cri-dockerd_0.3.16.3-0.ubuntu-jammy_amd64.deb
+dpkg: Ubuntu里面安装.deb文件的工具
+-i: install
+cri-dockerd_0.3.16.3-0.ubuntu-jammy_amd64.deb: 刚刚下载的文件
+
+第三步，安装Kubeadm,Kubelet和Kubectl
+$ sudo apt update && sudo apt-get install -y apt-transport-https ca-certificates curl
+Kubeadm, Kubernetes Admin,快速搭建和初始化 Kubernetes
+Kubelet, Kube let, 节点代理服务
+kubectl, Kube Control, Kubernetes控制器
+apt-transport-https和ca-certificates都是W3提到过的内容，用来下载Ubuntu内部没有收录的第三方软件比如Docker和K8s
+
+$ sudo curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+和上周一样下载密钥，当然下载的内容不一样
+
+$ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+和上周一样下载文件
+
+$ sudo apt update && sudo apt-get install -y kubelet kubeadm kubectl
+前几周有，不多阐述
+
+$ sudo apt-mark hold kubelet kubeadm kubectl
+apt-mark: apt package mark APT包标记工具
+hold Kubelet kubeadm kubectl: 保持这三个包锁定版本
+原因是官方建议，防止版本混乱（三个包版本必须匹配），避免apt update更新时候失去同步
+
+$ kubeadm version
+只是检查是否安装上了
+
+$ sudo swapoff -a
+关闭系统交换分区（SWAP），因为Kubernetes明确要求禁用
+SWAP就是9137上提过的虚拟内存，也就是内存不够时把不常用的数据存到硬盘里
+
+=== 仅Master机 ===
+$ sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock  --apiserver-advertise-address=<master-private-IP-address>
+
+ kubeadm init用来初始化kubenetes
+ --pod-network-cidr=10.244.0.0/16 设置pod内部网络的地址（默认）
+ --cri-socket=unix:///var/run/cri-dockerd.sock 选择容器运行时通信地址为 cri-dockerd,因为kubernetes现在不支持docker了
+ --apiserver-advertise-address=<master-private-IP-address> 选择Master对外ip地址（master ip)，为了内部可以互相通信，其实也可以选择public ip(虽然不推荐）
+
+
+$ mkdir -p $HOME/.kube 创建.kube文件夹（默认Kubectl配置目录）
+$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config 把kubernetes里面admin的配置文件复制到Kubectl默认目录位置，改名为config
+$ sudo chown $(id -u):$(id -g) $HOME/.kube/config 更改config的所有者（和权限）,以前拥有者是root，所以普通用户无法访问
+ - $(id -u)当前用户UID
+ - $(id -g)当前用户组GID
+ 
+=== 仅限Worker===
+$ sudo <JOIN_COMMAND> --cri-socket=unix:///var/run/cri-dockerd.sock
+唯一需要关注的就是后面的--cri-socket，同理，因为k8s不支持docker
+
+$ kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+(note: Weave net requires additional ports to be opened: TCP 6783, UDP 6783/6784).
+kubectl apply 根据YAML文件创建资源
+-f: from file,支持URL
+weave-daemonset-k8s.yaml: Weave net专为K8s设计
+为什么要Weavenet?因为不同的pod如果要跨节点通信就需要一个代理，相当于网卡
+为什么worker不需要装？因为只要Master执行了Darmon会自动部署到worker上
+
+$ kubectl cluster-info 获取当前cluster信息
+$ kubectl get nodes 获取所有node信息
+
+$ kubectl taint node <master-node-name> node-role.kubernetes.io/master:NoSchedule-
+移除污点，让master也可以运行pod，单台机必选，多台机可选，保留污点有助于保护控制平台
+kubectl taint 加/减污点
+node <master-node-name> 目标节点
+node-role.kubernetes.io/master 标记master
+NoSchedule- 删除效果NoSchedule（不让普通pod调度）
+如果换成NoSchedule那么就是添加效果
+
+=== Task3 ====
+
+Namespace: Kubernetes 的"虚拟文件夹"，用来把资源逻辑分组和隔离，让一个集群像多个独立集群一样用。
+
+$ kubectl get namespace 查看当下namespace
+$ kubectl create namespace <your-name> 创建新的namespace 
+
+$ kubectl get nodes,deployments,pods --namespace=<your-namespace> -o wide
+在你的namespace下查看节点，Deployment和Pod的信息
+Deployment控制Pods，下发任务，开启/关闭pod等
+Pod真正做任务
+-o wide: option wide，宽表输出(更多信息)
+
+$ kubectl create deployment --image nginx my-nginx-server --namespace=<your-namespace>
+kubectl create deployment: 让kubectl创建deployment
+--image nginx运行nginx，其实是dockerhub的image(因为用了cri-dockerd)
+my-nginx-server deployment名
+--namespace=<your-namespace> 部署到指定namespace
+
+也可以创建yml文件:
+
+apiVersion: apps/v1 # API 版本，apps/v1 是 Deployment 的稳定版本
+kind: Deployment # 资源类型，告诉 Kubernetes 创建 Deployment 对象
+metadata: # 元数据部分
+  name: nginx-deployment # Deployment 名称，集群里唯一标识
+spec: # 期望状态规格
+  selector: # 标签选择器，Deployment 管理所有带有 app=nginx 标签的 Pod
+    matchLabels:
+      app: nginx
+  replicas: 2 # 副本数，保持 2 个 Pod 运行（挂了自动补）
+  template: # Pod 模板，Deployment 创建 Pod 的蓝图
+    metadata:
+      labels: # Pod 标签，必须和上面 selector 匹配
+        app: nginx
+    spec:
+      containers: # 容器定义列表
+      - name: nginx # 容器名称
+        image: nginx:latest # Docker 镜像（从 Docker Hub 拉取）
+        ports: # 容器监听端口，nginx 默认 80 端口
+        - containerPort: 80
+
+
+$ kubectl apply -f my-deployment.yml --namespace=<your-namespace>
+声明式部署 YAML 文件中的资源到指定 Namespace。
+
+$ kubectl logs <pod-name> --namespace=<your-namespace>
+查看具体的一个pod
+
+$ kubectl exec -it <pod-name>  --namespace=<your-namespace> -- /bin/bash
+kubectl exec: 在pod容器内执行命令
+-it: -i,--stdin	保持标准输入打开,允许你输入命令（键盘敲 ls、cat 等）,-t,--tty，分配伪终端，提供终端界面
+<pod-name>: pod名
+--namespace=<your-namespace>: namespace名
+--: 分隔符
+/bin/bash: 要执行的命令
+
+$ kubectl scale deployment nginx-deployment --replicas=4 --namespace=<your-namespace>
+kubectl scale: 调整副本数量
+deployment nginx-deployment: 目标是nginx-deployment
+--replicas=4 新副本数量
+--namespace=<your-namespace> namespace名
+
+$ kubectl delete deployment nginx-deployment --namespace=<your-namespace>
+没啥好说的，删除deployment
+
+
+=== Task 4 ===
+$ curl <pod-ipaddress>:80 检查是否能连接到pod
+如果不行那么安装
+$ sudo apt install -y socat
+socat似乎是一个可以管理tcp udp转发的工具
+
+创建一个叫my-servce.yml的文件
+apiVersion: v1 
+kind: Service
+metadata:
+  name: my-service # Service name, used for internal DNS
+spec:
+  type: NodePort # Exposes a fixed port on every node
+  selector:
+    app: nginx # Routes traffic to Pods with label app=nginx
+  ports:
+    - protocol: TCP # Protocol type
+      port: 8080 # Service port, internal access via my-service:8080
+      targetPort: 80 # Container's listening port (nginx default 80)
+      nodePort: 30003 # External access via NodeIP:30003
+
+$ kubectl apply -f my-service.yml --namespace=<your-namespace>
+这个是不是前面弄过类似的，对啊
+
+$ kubectl get svc --namespace=<your-namespace> -o wide
+用来获取service的信息，svc应该就是service的意思
+
+$ curl <service-ip-address>:8080
+如果之前deployment删了的话这里得再加，要不然没有pod在工作啊
+
+
+
+
+
+
+
+
+
+
+
+
