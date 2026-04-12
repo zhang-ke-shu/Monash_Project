@@ -1,0 +1,97 @@
+Containers
+
+Virtualization problems:
+ - Each VM need OS
+ - Each OS need CPU, RAM and storage
+Result:
+ - Capital Expenditure
+ - Operation Expenditure
+ - SLOWWWWW to boot
+ - Portability issue
+
+Containers:
+ - Scalable, multiple copies can run on same machine or different machine
+ - Still provide isolation
+ - Can be stopped, saved and moved to another machine
+
+VM can be used together with container engine
+
+Similarities between VM and Containers:
+ - Both isolate an application and its dependencies
+ - Both remove need for physical hardware
+ - Both allow more efficient use of computing resources
+
+Docker
+
+DevOps:
+Dev: pack an image (lab)
+ - pull app-code from Github
+ - inspect dockerfile
+ - containerize the app
+ - run as container
+Ops: run an image (lab)
+ - download image
+ - start new container
+ - log into container
+ - run command inside container
+ - destroy container
+
+Docker Engine:
+ - Core container runtime: i.e the software engine that runs the container on a server
+
+Docker Engine has:
+ - Docker Daemon (responsible for actual operation inside)
+ - Docker Client (handles terminal)
+ - Docker Image: a read-only template
+ - Docker Container: everything you need in a box
+ - Docker registry: similar to github but for docker
+
+Dont worry about shim and runc
+
+Image:
+Container are built from images and can be saved as images
+You cannot delete image until you remove all associated containers first
+
+Where can you find image?
+ - Local
+ - Docker Hub (like app store or github)
+ - Private
+
+Images can be
+ - Official (verified)
+ - Unofficial (use with care)
+
+Layers:
+ - Image is built by layer (like your edit history or commit, but read only)
+ - each layer has 256 bit hash
+
+Shim:
+ - containerd use runc to create new containers
+ - shim keep the created container running and keep stdin/stdout open
+
+Basic command:
+
+ - docker container run -it ubuntu:latest /bin/bash
+  - -i: interactive
+  - -t: terminal
+  - ubuntu:latest: the image 
+  - /bin/bash: instead of running the default command, run bash as the process
+   - We need this to use the container like a normal Linux Shell
+ 
+ - docker container ls
+ - docker container exec 3027eb644874 bash 
+  - Only works on running containers
+ - docker container stop 3027eb644874
+ - docker container rm 3027eb644874
+
+Web server example:
+ - docker container run -d --name webserver -p 80:8080 nigelpoulton/pluralsight-docker-ci
+  - d means run in background
+  - nigelpoulton/pluralsight-docker-ci: image reference
+
+Dockerfile:
+ - plain text document about how to build an app into image
+ - each line is an instruction that would result in an image layer
+
+Squash image:
+ - basically deleting editing history

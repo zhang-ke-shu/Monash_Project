@@ -1,0 +1,44 @@
+Distributed System vs Computer Network:
+ - Distributed System: Multiple computer on the network working together as a system
+ - Network: Collection of interconnected computers that exchange message besed on specific protocols.
+
+Why distributed system?
+ - Resource sharing
+  - Hardware
+  - Software
+  - Other
+
+Consequence:
+ - Concurrency
+ - No global clock
+ - Independency failure
+
+Challenge:
+ - Hetrogeneity: Different resource(hardware/software) requirements
+ - Openess:
+ - Security
+ - Scalability:
+ - Concurrency:
+ - Failure Handling
+ - Transparancy
+ - Quality of Service
+
+Architectural Patterns:
+ - Client - Server
+ - Peer to Peer
+
+Cloud Computing:
+ - The illusion of infinite
+ - Elimination of upfront commitment
+ - Pay for use as needed
+
+Cloud Deployment Models:
+ - Private
+ - Public
+ - Community
+ - Hybrid
+
+Cloud Serice Models:
+ - IaaS: Infrasturecture as a Service
+ - PaaS: Platform as a Service
+ - Saas: Software as a Service

@@ -1,0 +1,71 @@
+Virtualization:
+ - Creation of a virtual version of something
+
+Hardware Virtualization:
+ - Having multiplle VM over underlying physical machine architecture with each VM running separate operate system instance.
+
+Motivation:
+ - Improve Resource Allocaton
+ - Resource & Failure Isolation
+ - Support Mixed-OS
+ - Security Isolation
+
+Features (Pros):
+ - Isolation
+ - Encapsulation: easy to make copy
+ - Portability
+ - Interposition
+
+VMM or HyperVisor:
+ - Responsible for managing VMs
+ - Processor Virtualization: multiplex
+
+Privileged instructions (Kernel Mode)
+ - I/O, Halt
+ - Context Switching
+ - Anything on your phone that requires permission
+
+Nonprivileged instructions: (User mode)
+ - Anything else
+
+User mode vs Supervisor mode:
+ - Hypervisor is run on Supervisor mode
+
+Virtualization types:
+ - Full virtualization
+ - Para virtualization
+
+Virtualization types:
+ - Native/Bare Metal
+ - Hosted
+
+Virtualizing
+ - Memory
+ - I/O
+ - Programming Language (JVM)
+ - Application-level
+
+Virtualization and cloud computing:
+ - Consolidation
+
+Migration of VMs:
+ - Cold Migration
+ - Live Migration
+  0. Running Guest Source
+  1. Establish
+  2. Create Guest Target
+  3. Send Read-only Pages
+  4. Send Read-write Pages
+  5. Send Dirty Pages (repeat)
+  6. Running Guest Target
+  7. Terminate Guest Source
+
+Live Migration types:
+ - Pre-copy: Minimal downtime
+ - Post-copy: Minimal execution state, transfer page during resume time (quicker transition)
+ - Hybrid: balance downtime and data integrity concerns
+
+Disadvantege of virtualizations:
+ - Performance degradation (VMM take time)
+ - Ineffiency and bad user experience
+ - New security holes and threats
