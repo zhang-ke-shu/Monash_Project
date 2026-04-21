@@ -13,7 +13,7 @@ app = FastAPI()
 
 # 加载你的 Model 4 (野生动物检测) [cite: 50]
 # 确保项目目录下有此权重文件
-model = YOLO("wildlife_model.pt")
+model = YOLO("yolov8l.pt")
 
 class ImageRequest(BaseModel):
     uuid: str # 客户端发送的唯一标识符 [cite: 56, 63]
