@@ -1,0 +1,17 @@
+names:
+- Elephant
+- Giraffe
+- Gorilla
+- Lion
+- Tiger
+- Zebra
+nc: 6
+roboflow:
+  license: CC BY 4.0
+  project: wild-animals-detection-fspct
+  url: https://universe.roboflow.com/puspendu-ai-vision-workspace/wild-animals-detection-fspct/dataset/1
+  version: 1
+  workspace: puspendu-ai-vision-workspace
+test: ../test/images
+train: ../train/images
+val: ../valid/images
