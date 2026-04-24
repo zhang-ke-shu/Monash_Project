@@ -17,7 +17,7 @@ spec:
       containers:
       - name: wildlife-app
         # Using the image you just pushed to GCP Artifact Registry
-        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v1
+        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v2
         ports:
         - containerPort: 8000
         # Defining resource requests/limits is critical for GKE Autopilot efficiency
@@ -26,7 +26,7 @@ spec:
             cpu: "500m"
             memory: "1Gi"
           limits:
-            cpu: "1000m"
+            cpu: "1.0"
             memory: "2Gi"
 ---
 # --- Section 4: Public Service (Load Balancer) ---

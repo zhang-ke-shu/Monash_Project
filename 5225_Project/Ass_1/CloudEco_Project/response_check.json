@@ -10,10 +10,10 @@
             "y": 635.8717651367188,
             "width": 996.429443359375,
             "height": 852.9754638671875,
-            "probability": 0.9636170268058777
+            "probability": 0.9636174440383911
         }
     ],
-    "speed_preprocess_ms": 17.424457999368315,
-    "speed_inference_ms": 2039.9785009994957,
-    "speed_postprocess_ms": 2.0422919997145073
+    "speed_preprocess_ms": 48.959503000332916,
+    "speed_inference_ms": 5638.370268000017,
+    "speed_postprocess_ms": 3.265709999595856
 }
