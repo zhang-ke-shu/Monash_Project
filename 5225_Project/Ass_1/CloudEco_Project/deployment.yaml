@@ -1,0 +1,45 @@
+# --- Section 4: Kubernetes Deployment Manifest ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wildlife-api-deployment
+spec:
+  # Maintain 2 replicas for High Availability (Section 4 Requirement)
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: wildlife-api
+  template:
+    metadata:
+      labels:
+        app: wildlife-api
+    spec:
+      containers:
+      - name: wildlife-app
+        # Using the image you just pushed to GCP Artifact Registry
+        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v1
+        ports:
+        - containerPort: 8000
+        # Defining resource requests/limits is critical for GKE Autopilot efficiency
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+---
+# --- Section 4: Public Service (Load Balancer) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wildlife-api-service
+spec:
+  # LoadBalancer type will provision a real public IP address on GCP
+  type: LoadBalancer
+  selector:
+    app: wildlife-api
+  ports:
+    - protocol: TCP
+      port: 80 # Public port
+      targetPort: 8000 # Internal container port
