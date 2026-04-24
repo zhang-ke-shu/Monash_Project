@@ -1,0 +1,19 @@
+{
+    "uuid": "real-test-uuid-001",
+    "count": 1,
+    "detections": [
+        "zebra"
+    ],
+    "boxes": [
+        {
+            "x": 894.2110595703125,
+            "y": 635.8717651367188,
+            "width": 996.429443359375,
+            "height": 852.9754638671875,
+            "probability": 0.9636170268058777
+        }
+    ],
+    "speed_preprocess_ms": 17.424457999368315,
+    "speed_inference_ms": 2039.9785009994957,
+    "speed_postprocess_ms": 2.0422919997145073
+}
