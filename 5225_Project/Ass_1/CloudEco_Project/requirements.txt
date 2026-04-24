@@ -1,0 +1,15 @@
+# Core web framework
+fastapi
+uvicorn
+
+# Computer vision and ML
+# Using headless version of OpenCV to reduce image size (no GUI dependencies)
+opencv-python-headless
+ultralytics
+pydantic
+requests
+
+# Optimization: Installing CPU-only version of PyTorch to save several GBs of space
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
