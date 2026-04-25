@@ -13,7 +13,7 @@
             "probability": 0.9636174440383911
         }
     ],
-    "speed_preprocess_ms": 48.959503000332916,
-    "speed_inference_ms": 5638.370268000017,
-    "speed_postprocess_ms": 3.265709999595856
+    "speed_preprocess_ms": 7.876129999999648,
+    "speed_inference_ms": 4991.009339000016,
+    "speed_postprocess_ms": 2.059067999994113
 }

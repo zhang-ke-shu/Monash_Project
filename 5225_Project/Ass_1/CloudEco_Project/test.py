@@ -3,7 +3,7 @@ import base64
 import json
 
 # 1. Local setup
-URL = "http://35.201.20.110/api/predict"
+URL = "http://34.151.179.167/api/predict"
 IMAGE_PATH = "zebra.jpg"  # Make sure you have a zebra or elephant image here
 OUTPUT_FILE = "response_check.json"
 
