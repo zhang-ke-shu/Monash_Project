@@ -1,10 +1,14 @@
 # --- Section 7: Locust Load Generation Script ---
 import base64
-from locust import HttpUser, task, between
+from locust import HttpUser, task, constant_pacing
 
 class WildlifeApiUser(HttpUser):
+    # Remove random wait; ensure each user sends a new request as soon as the last one finishes
+    # or use constant_pacing to fix the frequency.
+    wait_time = constant_pacing(0) # No wait between tasks
+class WildlifeApiUser(HttpUser):
     # Simulate a user waiting between 1 to 2 seconds between requests
-    wait_time = between(1, 2)
+    wait_time = constant_pacing(0)
 
     def on_start(self):
         # Pre-load and encode the image to save local CPU during testing
