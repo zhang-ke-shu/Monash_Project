@@ -17,7 +17,7 @@ app = FastAPI()
 
 # Load the YOLO model. 
 try:
-    model = YOLO("yolov8l.pt")
+    model = YOLO("yolov8n.pt")
 except Exception as e:
     logger.error(f"Failed to load YOLO model: {e}")
     raise RuntimeError("Model failed to load")

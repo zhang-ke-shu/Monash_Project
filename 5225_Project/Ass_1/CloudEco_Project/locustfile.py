@@ -2,7 +2,8 @@ import os
 import base64
 import random
 import uuid
-from locust import HttpUser, task, between
+from locust import HttpUser, task, constant_pacing
+
 
 IMAGE_FOLDER = os.getenv("IMAGE_FOLDER", "./test_images")
 MAX_IMAGES = int(os.getenv("MAX_IMAGES", 10))
@@ -45,7 +46,7 @@ preload_images()
 
 
 class WildlifeApiUser(HttpUser):
-    wait_time = between(0.5,1.5)
+    wait_time = constant_pacing(0)
 
     def make_payload(self):
         return {

@@ -17,7 +17,7 @@ spec:
       containers:
       - name: wildlife-app
         # Using the image you just pushed to GCP Artifact Registry
-        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v6
+        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v2
         ports:
         - containerPort: 8000
 

@@ -29,7 +29,7 @@ USER monash_user
 
 # Copy packages and code
 COPY main.py .
-COPY yolov8l.pt .
+COPY yolov8n.pt .
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,70 @@
+# 0. 进入 VM 后，安装基础工具
+sudo apt update
+sudo apt install -y docker.io git python3-pip python3-venv unzip curl wget gnupg software-properties-common
+
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+
+exit
+
+
+cd ~/5225
+
+
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project composed-card-490512-r1
+
+gcloud auth configure-docker australia-southeast1-docker.pkg.dev
+
+terraform init
+terraform validate
+terraform apply
+
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+
+gcloud container clusters get-credentials wildlife-cluster \
+  --zone australia-southeast1-a \
+  --project composed-card-490512-r1
+
+
+kubectl get nodes
+
+
+docker build -t wildlife-api:vm-v2 .
+
+
+docker tag wildlife-api:vm-v2 \
+australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v2
+
+docker push australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v2
+
+
+
+kubectl apply -f deployment.yaml
+
+kubectl get pods
+
+kubectl get svc
+
+try:http://EXTERNAL-IP/docs
+
+pip install locust
+
+
+locust -f locustfile.py --host=http://EXTERNAL-IP
+
+kubectl scale deployment wildlife-api-deployment --replicas=1
+kubectl get pods
+
+
+kubectl get pods
+kubectl get svc
+kubectl get nodes
+docker images
+df -h
+
+docker image prune -a -f
