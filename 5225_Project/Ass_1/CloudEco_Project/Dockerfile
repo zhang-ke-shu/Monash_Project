@@ -4,8 +4,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt \
+    && rm -rf /root/.cache/pip
 
 # --- Stage 2: Final Runtime Stage ---
 FROM python:3.10-slim
@@ -20,10 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create a non-root user
 RUN useradd -m monash_user
+
+COPY --from=builder /install /usr/local
 USER monash_user
 
 # Copy packages and code
-COPY --from=builder /install /usr/local
 COPY main.py .
 COPY yolov8l.pt .
 

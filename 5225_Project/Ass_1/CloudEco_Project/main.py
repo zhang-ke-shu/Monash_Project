@@ -1,108 +1,152 @@
 import base64
-import io
 import numpy as np
 import cv2
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
 from ultralytics import YOLO
-from starlette.concurrency import run_in_threadpool # 用于处理非阻塞推理
+from starlette.concurrency import run_in_threadpool
+import logging
 
-# 初始化 FastAPI
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+
+# Initialize FastAPI application
 app = FastAPI()
 
-# 加载你的 Model 4 (野生动物检测) [cite: 50]
-# 确保项目目录下有此权重文件
-model = YOLO("yolov8l.pt")
+# Load the YOLO model. 
+try:
+    model = YOLO("yolov8l.pt")
+except Exception as e:
+    logger.error(f"Failed to load YOLO model: {e}")
+    raise RuntimeError("Model failed to load")
+
+if model is None:
+    raise RuntimeError("Model failed to load")
+
+# --- Pydantic Models for Data Validation ---
 
 class ImageRequest(BaseModel):
-    uuid: str # 客户端发送的唯一标识符 [cite: 56, 63]
-    image: str # Base64 编码的图像字符串 [cite: 56, 64]
+    uuid: str 
+    image: str 
 
 class BoxInfo(BaseModel):
     x: float
     y: float
     width: float
     height: float
-    probability: float # 置信度 [cite: 72, 82]
+    probability: float 
 
 class PredictResponse(BaseModel):
-    uuid: str # 必须返回与请求一致的 uuid [cite: 68, 78]
-    count: int # 检测到的物体总数 [cite: 69, 80]
-    detections: List[str] # 类别名称列表 [cite: 70]
-    boxes: List[BoxInfo] # 坐标详情列表 [cite: 71, 72]
-    speed_preprocess_ms: float # 预处理延迟 [cite: 73, 84]
-    speed_inference_ms: float # 推理延迟 [cite: 74, 84]
-    speed_postprocess_ms: float # 后处理延迟 [cite: 75, 84]
+    uuid: str 
+    count: int 
+    detections: List[str] 
+    boxes: List[BoxInfo] 
+    speed_preprocess_ms: float 
+    speed_inference_ms: float 
+    speed_postprocess_ms: float 
 
+class AnnotateResponse(BaseModel):
+    uuid: str
+    image: str
 
-def process_base64_image(base64_str: str):
-    # 将 Base64 解码为二进制字节流 [cite: 58]
-    img_data = base64.b64decode(base64_str)
-    # 转换为 NumPy 数组
-    nparr = np.frombuffer(img_data, np.uint8)
-    # 使用 OpenCV 读取为图像矩阵
-    return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+# --- CPU-Bound Pipeline Functions (The "Kitchen") ---
+# EVERYTHING inside these functions will run in a background thread,
+# completely freeing up the FastAPI event loop.
 
-def convert_to_base64(image_np):
-    # 将图像矩阵转回 Base64，用于标注接口 [cite: 88]
-    _, buffer = cv2.imencode('.jpg', image_np)
-    return base64.b64encode(buffer).decode('utf-8')
+def decode_base64_to_cv2(base64_str: str):
+    """CPU-bound task: Decodes base64 to image matrix."""
+    try:
+        img_data = base64.b64decode(base64_str, validate=True)
+        nparr = np.frombuffer(img_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("Decoded image is empty.")
+        return img
+    except Exception as e:
+        raise ValueError(f"Image decoding failed: {e}")
 
-
-def run_model_inference(img):
-    # 执行 YOLO 推理 [cite: 48, 54]
-    results = model.predict(img)
+def execute_predict_pipeline(base64_image: str):
+    """Full CPU-bound pipeline for the /predict endpoint."""
+    img = decode_base64_to_cv2(base64_image)
+    results = model.predict(img, conf=0.5, imgsz=320, verbose=False)
     result = results[0]
     
-    # 获取 Ultralytics 自动生成的延迟指标 
     latency = result.speed 
-    
     boxes_data = []
     labels_data = []
     
     for box in result.boxes:
-        # 提取类别名称 [cite: 58]
         labels_data.append(model.names[int(box.cls)])
-        # 提取坐标 (x,y,w,h) [cite: 72, 81]
         x, y, w, h = box.xywh[0].tolist()
         boxes_data.append({
-            "x": x, "y": y, "width": w, "height": h,
-            "probability": float(box.conf)
+            "x": round(x, 4), 
+            "y": round(y, 4), 
+            "width": round(w, 4), 
+            "height": round(h, 4),
+            "probability": round(float(box.conf), 4)
         })
         
-    return result, len(labels_data), labels_data, boxes_data, latency
+    return len(labels_data), labels_data, boxes_data, latency
 
+def execute_annotate_pipeline(base64_image: str):
+    """Full CPU-bound pipeline for the /annotate endpoint."""
+    img = decode_base64_to_cv2(base64_image)
+    results = model.predict(img, conf=0.5, imgsz=320, verbose=False)
+    
+    # Ultralytics plotting is also CPU-bound
+    annotated_img = results[0].plot() 
+    
+    # Encoding back to base64 is CPU-bound
+    _, buffer = cv2.imencode('.jpg', annotated_img)
+    return base64.b64encode(buffer).decode('utf-8')
+
+
+# --- Async API Endpoints (The "Waiter") ---
 
 @app.post("/api/predict", response_model=PredictResponse)
 async def predict_api(request: ImageRequest):
-    # 解码图像
-    img = process_base64_image(request.image)
-    
-    # HD 重点：在线程池执行推理，避免阻塞主循环 
-    _, count, labels, boxes, speed = await run_in_threadpool(run_model_inference, img)
-    
-    return {
-        "uuid": request.uuid,
-        "count": count,
-        "detections": labels,
-        "boxes": boxes,
-        "speed_preprocess_ms": speed['preprocess'],
-        "speed_inference_ms": speed['inference'],
-        "speed_postprocess_ms": speed['postprocess']
-    }
+    logger.info(f"Received prediction request: {request.uuid}")
+    try:
+        # The waiter instantly hands the ENTIRE job to the threadpool.
+        # The event loop is now free to accept hundreds of other requests.
+        count, labels, boxes, speed = await run_in_threadpool(
+            execute_predict_pipeline, request.image
+        )
+        
+        return {
+            "uuid": request.uuid,
+            "count": count,
+            "detections": labels,
+            "boxes": boxes,
+            "speed_preprocess_ms": round(speed.get('preprocess', 0.0), 2),
+            "speed_inference_ms": round(speed.get('inference', 0.0), 2),
+            "speed_postprocess_ms": round(speed.get('postprocess', 0.0), 2)
+        }
+    except ValueError as ve:
+        logger.error(f"Prediction validation failed: {ve}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Prediction failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error during prediction.")
 
-@app.post("/api/annotate")
+
+@app.post("/api/annotate", response_model=AnnotateResponse)
 async def annotate_api(request: ImageRequest):
-    img = process_base64_image(request.image)
-    
-    # 获取推理结果及画好框的图片
-    result, _, _, _, _ = await run_in_threadpool(run_model_inference, img)
-    
-    # 使用 YOLO 自带工具生成标注图 [cite: 87]
-    annotated_img = result.plot()
-    
-    return {
-        "uuid": request.uuid,
-        "image": convert_to_base64(annotated_img) # 转回 Base64 [cite: 88]
-    }
+    try:
+        # Offload decoding, inference, plotting, and encoding to the background.
+        annotated_base64 = await run_in_threadpool(
+            execute_annotate_pipeline, request.image
+        )
+        
+        return {
+            "uuid": request.uuid,
+            "image": annotated_base64
+        }
+    except ValueError as ve:
+        logger.info(f"Annotation validation request:{ve}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.info(f"Annotation failed:{e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error during annotation.")

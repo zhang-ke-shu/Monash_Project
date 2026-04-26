@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: wildlife-api-deployment
 spec:
-  # Maintain 2 replicas for High Availability (Section 4 Requirement)
+  # replicas dynamically scaled
   replicas: 2 
   selector:
     matchLabels:
@@ -17,9 +17,24 @@ spec:
       containers:
       - name: wildlife-app
         # Using the image you just pushed to GCP Artifact Registry
-        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v2
+        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:v6
         ports:
         - containerPort: 8000
+
+        livenessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
         # Defining resource requests/limits is critical for GKE Autopilot efficiency
         resources:
           requests:
@@ -34,6 +49,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wildlife-api-service
+  namespace: default
 spec:
   # LoadBalancer type will provision a real public IP address on GCP
   type: LoadBalancer

@@ -6,14 +6,14 @@
     ],
     "boxes": [
         {
-            "x": 894.2110595703125,
-            "y": 635.8717651367188,
-            "width": 996.429443359375,
-            "height": 852.9754638671875,
-            "probability": 0.9636174440383911
+            "x": 894.2111,
+            "y": 635.8718,
+            "width": 996.4294,
+            "height": 852.9755,
+            "probability": 0.9636
         }
     ],
-    "speed_preprocess_ms": 7.876129999999648,
-    "speed_inference_ms": 4991.009339000016,
-    "speed_postprocess_ms": 2.059067999994113
+    "speed_preprocess_ms": 20.23,
+    "speed_inference_ms": 4313.04,
+    "speed_postprocess_ms": 1.87
 }
