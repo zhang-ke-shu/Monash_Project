@@ -2,6 +2,25 @@
 sudo apt update
 sudo apt install -y docker.io git python3-pip python3-venv unzip curl wget gnupg software-properties-common
 
+sudo apt update
+sudo apt install -y kubectl google-cloud-cli-gke-gcloud-auth-plugin
+
+sudo apt install -y python3-venv
+python3 -m venv venv
+source venv/bin/activate
+
+wget -O- https://apt.releases.hashicorp.com/gpg | \
+gpg --dearmor | \
+sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+sudo apt update
+sudo apt install -y terraform
+terraform -version
+
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker $USER
@@ -9,9 +28,17 @@ sudo usermod -aG docker $USER
 
 exit
 
+gcloud compute scp --recurse \
+"/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
+kzha0139@<name>:~ \
+--zone australia-southeast1-a
+
+gcloud compute scp --project="composed-card-490512-r1" --zone="australia-southeast1-a" --recurse \
+<虚拟机名称>:~/CloudEco_Project /Users/apple/Downloads/
 
 cd ~/5225
 
+sudo chown -R $USER:$USER ~/5225
 
 gcloud auth login
 gcloud auth application-default login
@@ -19,8 +46,11 @@ gcloud config set project composed-card-490512-r1
 
 gcloud auth configure-docker australia-southeast1-docker.pkg.dev
 
+
+
 terraform init
 terraform validate
+terraform plan
 terraform apply
 
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
@@ -34,13 +64,15 @@ gcloud container clusters get-credentials wildlife-cluster \
 kubectl get nodes
 
 
-docker build -t wildlife-api:vm-v2 .
+docker build -t wildlife-api:vm-v6 .
 
 
-docker tag wildlife-api:vm-v2 \
-australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v2
+docker tag wildlife-api:vm-v6 \
+australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v6
 
-docker push australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v2
+docker images
+
+docker push australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v6
 
 
 
@@ -51,11 +83,13 @@ kubectl get pods
 kubectl get svc
 
 try:http://EXTERNAL-IP/docs
+http://34.40.252.123/docs
 
 pip install locust
 
 
 locust -f locustfile.py --host=http://EXTERNAL-IP
+locust -f locustfile.py --host http://34.40.252.123
 
 kubectl scale deployment wildlife-api-deployment --replicas=1
 kubectl get pods
@@ -68,3 +102,5 @@ docker images
 df -h
 
 docker image prune -a -f
+terraform destroy
+kubectl delete pods (--all)
