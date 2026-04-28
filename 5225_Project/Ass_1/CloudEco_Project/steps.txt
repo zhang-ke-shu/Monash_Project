@@ -35,12 +35,29 @@ ansible -i ansible_hosts.ini masters -m shell -a "kubectl scale deployment wildl
 
 gcloud compute ssh k8s-master --zone australia-southeast1-a
 
+
 kubectl get pods -A -o wide
 
 kubectl get pods
 
 kubectl scale deployment wildlife-api-deployment --replicas=1
 
+kubectl describe pod wildlife-api-deployment-xxxx
+
+kubectl logs <pod-name-1> --since=2m | wc -l
+
+
+gcloud compute ssh k8s-worker-1 --zone australia-southeast1-a
+gcloud compute ssh k8s-worker-2 --zone australia-southeast1-a
+
+sudo systemctl status kubelet
+sudo systemctl status containerd
+sudo crictl ps
+sudo crictl images
+
+
+locust -f locustfile.py --host=http://<worker ip>:30080
+locust -f locustfile.py --host=http://35.201.20.110:30080
 
 # 0. 进入 VM 后，安装基础工具
 sudo apt update

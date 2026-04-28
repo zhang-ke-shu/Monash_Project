@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wildlife-api-deployment
+  namespace: default
 spec:
-  # replicas dynamically scaled
-  replicas: 1 
+  replicas: 1
   selector:
     matchLabels:
       app: wildlife-api
@@ -15,36 +15,38 @@ spec:
         app: wildlife-api
     spec:
       containers:
-      - name: wildlife-app
-        # Using the image you just pushed to GCP Artifact Registry
-        image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v6
-        ports:
-        - containerPort: 8000
+        - name: wildlife-app
+          image: australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v6
+          ports:
+            - containerPort: 8000
 
-        livenessProbe:
-          httpGet:
-            path: /docs
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 3
 
-        readinessProbe:
-          httpGet:
-            path: /docs
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
 
-        # Resource requests and limits ensure each pod is constrained to 1 vCPU for benchmarking.
-        resources:
-          requests:
-            cpu: "1"
-            memory: "1Gi"
-          limits:
-            cpu: "1"
-            memory: "2Gi"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+
 ---
-# --- Section 4: Public Service (Load Balancer) ---
 apiVersion: v1
 kind: Service
 metadata:
