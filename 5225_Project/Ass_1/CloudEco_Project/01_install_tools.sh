@@ -26,6 +26,7 @@ sudo apt install -y \
   wget \
   unzip \
   gnupg \
+  
   lsb-release\
   software-properties-common \
   apt-transport-https \

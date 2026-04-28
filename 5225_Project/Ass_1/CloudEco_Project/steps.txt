@@ -7,6 +7,22 @@ kzha0139@instance-20260428-120646:~ \
 gcloud auth login
 gcloud auth application-default login
 
+
+chmod +x install_tools.sh
+./install_tools.sh
+
+chmod +x auth_gcp.sh
+./auth_gcp.sh
+
+gcloud config set account kzha0139@student.monash.edu
+
+
+
+
+
+
+
+
 # 0. 进入 VM 后，安装基础工具
 sudo apt update
 sudo apt install -y docker.io git python3-pip python3-venv unzip curl wget gnupg software-properties-common
@@ -113,4 +129,6 @@ docker image prune -a -f
 terraform destroy
 kubectl delete pods 
 kubectl delete pods --all
+
+
 
