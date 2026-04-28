@@ -3,7 +3,10 @@ FROM python:3.10-slim AS builder
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.pt -O /app/yolov8n.pt
 
 COPY requirements.txt .
 
@@ -25,11 +28,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m monash_user
 
 COPY --from=builder /install /usr/local
+COPY --from=builder --chown=monash_user:monash_user /app/yolov8n.pt .
+
 USER monash_user
 
 # Copy packages and code
 COPY main.py .
-COPY yolov8n.pt .
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

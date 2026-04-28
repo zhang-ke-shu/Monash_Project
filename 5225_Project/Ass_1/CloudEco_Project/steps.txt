@@ -32,9 +32,18 @@ gcloud compute scp --recurse \
 "/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
 kzha0139@<name>:~ \
 --zone australia-southeast1-a
+gcloud compute scp \
+"" \
+kzha0139@instance-20260428-031051:~ \
+--zone australia-southeast1-a
+
+# 确保脚本在 ~ 目录或 ~/5225 目录
+./setup_and_deploy.sh
 
 gcloud compute scp --project="composed-card-490512-r1" --zone="australia-southeast1-a" --recurse \
 <虚拟机名称>:~/CloudEco_Project /Users/apple/Downloads/
+instance-20260428-031051
+
 
 cd ~/5225
 
@@ -83,13 +92,14 @@ kubectl get pods
 kubectl get svc
 
 try:http://EXTERNAL-IP/docs
-http://34.40.252.123/docs
+http://34.40.143.233/docs
+
 
 pip install locust
 
 
 locust -f locustfile.py --host=http://EXTERNAL-IP
-locust -f locustfile.py --host http://34.40.252.123
+locust -f locustfile.py --host http://34.40.143.233
 
 kubectl scale deployment wildlife-api-deployment --replicas=1
 kubectl get pods
@@ -103,4 +113,6 @@ df -h
 
 docker image prune -a -f
 terraform destroy
-kubectl delete pods (--all)
+kubectl delete pods 
+kubectl delete pods --all
+

@@ -50,13 +50,27 @@ if [ -d "~/5225" ]; then
     cd ~/5225
 fi
 
-# --- 6. GCP Authentication ---
-# INTERACTIVE STEP: requires user input for browser-based auth
-echo "Authenticating with Google Cloud..."
-gcloud auth login --no-launch-browser
-gcloud auth application-default login --no-launch-browser
-gcloud config set project $PROJECT_ID
-gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+# --- 6. Non-Interactive GCP Authentication ---
+# Using a service account key file to skip browser authentication [cite: 10, 11]
+echo "Authenticating using service account key..."
+
+KEY_FILE="gcp-key.json"
+
+if [ -f "$KEY_FILE" ]; then
+    # Authenticate gcloud CLI
+    gcloud auth activate-service-account --key-file="$KEY_FILE" 
+    
+    # Authenticate Application Default Credentials (ADC) for Terraform
+    export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/"$KEY_FILE" 
+    
+    # Configure Docker authentication
+    gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet [cite: 12]
+    
+    gcloud config set project $PROJECT_ID [cite: 12]
+else
+    echo "ERROR: $KEY_FILE not found. Please upload the service account key."
+    exit 1
+fi
 
 # --- 7. Infrastructure as Code (IaC) ---
 # Professional-grade IaC lifecycle 
