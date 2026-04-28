@@ -5,26 +5,25 @@ set -e
 # Configuration variables
 # ============================================================
 
-# GCP project information
 PROJECT_ID="composed-card-490512-r1"
 REGION="australia-southeast1"
 ZONE="australia-southeast1-a"
 
-# Artifact Registry image information
 REPO_NAME="wildlife-repo"
 IMAGE_NAME="wildlife-api"
 TAG="vm-v6"
+
+# Existing image in Artifact Registry
 AR_PATH="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${TAG}"
 
-# Self-managed Kubernetes VM names
 MASTER_NAME="k8s-master"
 WORKER1_NAME="k8s-worker-1"
 WORKER2_NAME="k8s-worker-2"
 
-echo "Starting self-managed Kubernetes deployment..."
+echo "Starting self-managed Kubernetes deployment using existing image: $AR_PATH"
 
 # ============================================================
-# 0. Install required local tools on the current machine
+# 0. Install required local tools
 # ============================================================
 
 echo "Checking and installing required local tools..."
@@ -42,20 +41,7 @@ sudo apt install -y \
   apt-transport-https \
   ca-certificates
 
-# Install Docker if it is not already installed.
-# Docker is needed to build and push the FastAPI application image.
-if ! command -v docker &> /dev/null; then
-    echo "Installing Docker..."
-    sudo apt install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo usermod -aG docker $USER
-else
-    echo "Docker is already installed."
-fi
-
-# Install Terraform if it is not already installed.
-# Terraform is used to provision the GCP VMs, VPC, subnet, and firewall rules.
+# Install Terraform if missing
 if ! command -v terraform &> /dev/null; then
     echo "Installing Terraform..."
 
@@ -73,8 +59,7 @@ else
     echo "Terraform is already installed."
 fi
 
-# Install Google Cloud CLI if it is not already installed.
-# gcloud is required for authentication, SSH, SCP, and Artifact Registry access.
+# Install Google Cloud CLI if missing
 if ! command -v gcloud &> /dev/null; then
     echo "Installing Google Cloud CLI..."
 
@@ -111,7 +96,6 @@ else
 fi
 
 echo "Tool versions:"
-docker --version
 terraform -version
 gcloud --version | head -n 1
 kubectl version --client
@@ -122,10 +106,6 @@ kubectl version --client
 
 echo "Checking GCP authentication..."
 
-# This script does not use gcp-key.json for security reasons.
-# The user must authenticate manually before running this script:
-#   gcloud auth login
-#   gcloud auth application-default login
 if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
     echo "No active gcloud account found."
     echo "Please run these commands first:"
@@ -136,14 +116,14 @@ fi
 
 echo "Using existing gcloud authentication."
 
-# Set the active GCP project.
 gcloud config set project $PROJECT_ID
 
-# Configure Docker so it can push images to Artifact Registry.
+# Configure Docker credential helper for Artifact Registry.
+# This is still useful because Kubernetes nodes may need access to the image registry.
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 
 # ============================================================
-# 2. Provision cloud infrastructure with Terraform
+# 2. Provision infrastructure with Terraform
 # ============================================================
 
 echo "Running Terraform..."
@@ -153,19 +133,11 @@ terraform validate
 terraform apply -auto-approve
 
 # ============================================================
-# 3. Build and push Docker image
+# 3. Skip Docker build and push
 # ============================================================
 
-echo "Building and pushing Docker image..."
-
-# Build the local Docker image.
-docker build -t $IMAGE_NAME:$TAG .
-
-# Tag the image using the Artifact Registry path.
-docker tag $IMAGE_NAME:$TAG $AR_PATH
-
-# Push the image to Artifact Registry.
-docker push $AR_PATH
+echo "Skipping Docker build and push."
+echo "Using existing image: $AR_PATH"
 
 # ============================================================
 # 4. Install Kubernetes components on all VMs
@@ -180,15 +152,12 @@ do
     gcloud compute ssh $VM --zone $ZONE --command='
         set -e
 
-        # Install container runtime and required packages.
         sudo apt update
         sudo apt install -y containerd apt-transport-https ca-certificates curl gpg
 
-        # Kubernetes requires swap to be disabled.
         sudo swapoff -a
         sudo sed -i "/ swap / s/^/#/" /etc/fstab
 
-        # Load kernel modules required by Kubernetes networking.
         sudo modprobe overlay
         sudo modprobe br_netfilter
 
@@ -197,7 +166,6 @@ overlay
 br_netfilter
 EOF
 
-        # Configure networking sysctl settings for Kubernetes.
         cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables=1
 net.ipv4.ip_forward=1
@@ -206,14 +174,12 @@ EOF
 
         sudo sysctl --system
 
-        # Configure containerd to use systemd cgroups.
         sudo mkdir -p /etc/containerd
         containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
         sudo sed -i "s/SystemdCgroup = false/SystemdCgroup = true/" /etc/containerd/config.toml
         sudo systemctl restart containerd
         sudo systemctl enable containerd
 
-        # Add Kubernetes package repository.
         sudo mkdir -p /etc/apt/keyrings
 
         curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | \
@@ -223,11 +189,7 @@ EOF
         sudo tee /etc/apt/sources.list.d/kubernetes.list
 
         sudo apt update
-
-        # Install kubelet, kubeadm, and kubectl.
         sudo apt install -y kubelet kubeadm kubectl
-
-        # Hold versions to avoid unexpected upgrades.
         sudo apt-mark hold kubelet kubeadm kubectl
     '
 done
@@ -241,26 +203,21 @@ echo "Initialising Kubernetes master node..."
 gcloud compute ssh $MASTER_NAME --zone $ZONE --command='
     set -e
 
-    # Reset any previous Kubernetes state.
     sudo kubeadm reset -f || true
 
-    # Create the Kubernetes control plane.
     sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
-    # Configure kubectl access for the current user on the master node.
     mkdir -p $HOME/.kube
     sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-    # Install Calico as the Kubernetes CNI plugin.
     kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.2/manifests/calico.yaml
 
-    # Generate the join command for worker nodes.
     kubeadm token create --print-join-command > /tmp/kubeadm_join_command.sh
 '
 
 # ============================================================
-# 6. Fetch worker join command from master node
+# 6. Fetch worker join command
 # ============================================================
 
 echo "Fetching worker join command..."
@@ -270,7 +227,7 @@ gcloud compute scp $MASTER_NAME:/tmp/kubeadm_join_command.sh ./kubeadm_join_comm
 JOIN_COMMAND=$(cat kubeadm_join_command.sh)
 
 # ============================================================
-# 7. Join worker nodes to the Kubernetes cluster
+# 7. Join worker nodes
 # ============================================================
 
 for VM in $WORKER1_NAME $WORKER2_NAME
@@ -285,19 +242,17 @@ do
 done
 
 # ============================================================
-# 8. Copy kubeconfig from master to the current machine
+# 8. Copy kubeconfig from master
 # ============================================================
 
 echo "Copying kubeconfig from master node..."
 
-# Copy kubeconfig to the current project directory.
 gcloud compute scp $MASTER_NAME:~/.kube/config ./kubeconfig --zone $ZONE
 
-# Use this kubeconfig for following kubectl commands.
 export KUBECONFIG=$(pwd)/kubeconfig
 
 # ============================================================
-# 9. Verify Kubernetes cluster
+# 9. Verify cluster
 # ============================================================
 
 echo "Verifying Kubernetes cluster..."
@@ -306,20 +261,19 @@ kubectl get nodes
 kubectl get pods -A
 
 # ============================================================
-# 10. Update image path and deploy application
+# 10. Deploy application using existing vm-v6 image
 # ============================================================
 
-echo "Updating deployment image..."
+echo "Updating deployment.yaml to use existing image..."
 
-# Replace the image field in deployment.yaml with the current Artifact Registry image.
 sed -i.bak "s|image: .*|image: ${AR_PATH}|g" deployment.yaml
 
-echo "Applying Kubernetes deployment and service..."
+echo "Applying Kubernetes manifests..."
 
 kubectl apply -f deployment.yaml
 
 # ============================================================
-# 11. Show final deployment status
+# 11. Final status
 # ============================================================
 
 echo "Final Kubernetes status:"
@@ -328,7 +282,7 @@ kubectl get pods -o wide
 kubectl get svc
 
 echo "Deployment complete."
-echo "Use one of the following URLs to access the FastAPI docs:"
-echo "http://35.201.20.110:30080/docs"
-echo "http://34.151.179.167:30080/docs"
-echo "http://34.87.231.125:30080/docs"
+echo "The application uses existing image:"
+echo "$AR_PATH"
+echo "Access FastAPI docs through:"
+echo "http://<VM_PUBLIC_IP>:30080/docs"

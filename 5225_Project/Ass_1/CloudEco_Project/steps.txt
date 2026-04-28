@@ -1,9 +1,15 @@
+# Copy project folder to VM
+gcloud compute scp --recurse \
+"/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
+kzha0139@instance-20260428-120646:~ \
+--zone australia-southeast1-a
+
+gcloud auth login
+gcloud auth application-default login
+
 # 0. 进入 VM 后，安装基础工具
 sudo apt update
 sudo apt install -y docker.io git python3-pip python3-venv unzip curl wget gnupg software-properties-common
-
-sudo apt update
-sudo apt install -y kubectl google-cloud-cli-gke-gcloud-auth-plugin
 
 sudo apt install -y python3-venv
 python3 -m venv venv
@@ -28,16 +34,14 @@ sudo usermod -aG docker $USER
 
 exit
 
+# Copy project folder to VM
 gcloud compute scp --recurse \
 "/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
 kzha0139@<name>:~ \
 --zone australia-southeast1-a
-gcloud compute scp \
-"" \
-kzha0139@instance-20260428-031051:~ \
---zone australia-southeast1-a
 
-# 确保脚本在 ~ 目录或 ~/5225 目录
+chmod +x setup_and_deploy.sh 
+
 ./setup_and_deploy.sh
 
 gcloud compute scp --project="composed-card-490512-r1" --zone="australia-southeast1-a" --recurse \
@@ -62,17 +66,11 @@ terraform validate
 terraform plan
 terraform apply
 
-export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-
-
-gcloud container clusters get-credentials wildlife-cluster \
-  --zone australia-southeast1-a \
-  --project composed-card-490512-r1
 
 
 kubectl get nodes
 
-
+'''
 docker build -t wildlife-api:vm-v6 .
 
 
@@ -82,7 +80,7 @@ australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildli
 docker images
 
 docker push australia-southeast1-docker.pkg.dev/composed-card-490512-r1/wildlife-repo/wildlife-api:vm-v6
-
+'''
 
 
 kubectl apply -f deployment.yaml
