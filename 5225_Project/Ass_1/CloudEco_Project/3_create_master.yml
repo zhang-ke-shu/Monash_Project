@@ -1,0 +1,58 @@
+---
+- name: Initialise Kubernetes master node
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Reset previous Kubernetes state if any
+      command: kubeadm reset -f
+      ignore_errors: yes
+
+    - name: Remove old Kubernetes config
+      file:
+        path: /etc/kubernetes
+        state: absent
+      ignore_errors: yes
+
+    - name: Initialise Kubernetes control plane
+      command: kubeadm init --pod-network-cidr=192.168.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Create kubeconfig directory for ansible user
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    - name: Copy admin kubeconfig to ansible user
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ ansible_user }}/.kube/config"
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0600"
+
+    - name: Install Calico CNI
+      become_user: "{{ ansible_user }}"
+      shell: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.2/manifests/calico.yaml
+
+    - name: Generate worker join command
+      command: kubeadm token create --print-join-command
+      register: join_command
+
+    - name: Save join command on master
+      copy:
+        dest: /tmp/kubeadm_join_command.sh
+        content: "{{ join_command.stdout }}\n"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Fetch join command to controller
+      fetch:
+        src: /tmp/kubeadm_join_command.sh
+        dest: ./kubeadm_join_command.sh
+        flat: yes

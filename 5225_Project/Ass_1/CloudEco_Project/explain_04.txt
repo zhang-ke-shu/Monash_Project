@@ -1,0 +1,175 @@
+# ============================================================
+# Kubernetes Cluster Status Explanation (中英双语说明)
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. Nodes (集群节点)
+# ------------------------------------------------------------
+# Nodes are the virtual machines that form the Kubernetes cluster.
+# 节点是组成 Kubernetes 集群的虚拟机。
+
+# Example:
+# NAME           STATUS   ROLES           INTERNAL-IP
+# k8s-master     Ready    control-plane   10.10.0.2
+# k8s-worker-1   Ready    <none>          10.10.0.3
+# k8s-worker-2   Ready    <none>          10.10.0.4
+
+# k8s-master:
+#   The control-plane node (cluster brain).
+#   控制节点，负责整个集群的管理与调度。
+
+# k8s-worker-1 / k8s-worker-2:
+#   Worker nodes that run application workloads (Pods).
+#   工作节点，用于运行实际的应用（Pods）。
+
+# STATUS = Ready:
+#   The node is healthy and able to run workloads.
+#   表示节点健康，可以正常运行任务。
+
+# ------------------------------------------------------------
+# 2. Ansible Play Recap (自动化执行结果)
+# ------------------------------------------------------------
+# Shows the result of configuration tasks on each node.
+# 显示每台机器执行自动化配置任务的结果。
+
+# Example:
+# ok=3 changed=1 unreachable=0 failed=0
+
+# ok:
+#   Tasks executed successfully.
+#   成功执行的任务数量。
+
+# changed:
+#   Tasks that made actual changes to the system.
+#   对系统产生修改的任务数量。
+
+# failed:
+#   Number of failed tasks (should be 0).
+#   失败任务数量（应为0）。
+
+# ------------------------------------------------------------
+# 3. Node Ready Check (节点就绪检测)
+# ------------------------------------------------------------
+# Example:
+# node/k8s-master condition met
+
+# This confirms all nodes have reached the "Ready" state.
+# 表示所有节点已经进入 Ready 状态，集群已经可用。
+
+# ------------------------------------------------------------
+# 4. Kubernetes System Pods (核心系统组件)
+# ------------------------------------------------------------
+# These pods run in the "kube-system" namespace.
+# 这些组件运行在 kube-system 命名空间中，是 Kubernetes 核心组件。
+
+# ------------------------------------------------------------
+# 4.1 Calico (Network Plugin 网络插件)
+# ------------------------------------------------------------
+# calico-node / calico-kube-controllers
+
+# Purpose:
+#   Provides networking between Pods.
+#   为 Pod 提供网络通信能力。
+
+# Without Calico:
+#   Pods cannot communicate with each other.
+#   没有它 Pod 无法互相通信。
+
+# ------------------------------------------------------------
+# 4.2 CoreDNS (集群 DNS 服务)
+# ------------------------------------------------------------
+# coredns
+
+# Purpose:
+#   Provides DNS resolution inside the cluster.
+#   为集群内部提供 DNS 解析服务。
+
+# Example:
+#   service-name.default.svc.cluster.local
+#   Allows Pods to access each other by name.
+#   允许 Pod 通过服务名互相访问。
+
+# ------------------------------------------------------------
+# 4.3 etcd (集群数据库)
+# ------------------------------------------------------------
+# etcd-k8s-master
+
+# Purpose:
+#   Stores all cluster data (state, config, nodes, pods).
+#   存储整个集群的所有数据（状态、配置、节点信息等）。
+
+# Think of it as:
+#   The database of Kubernetes.
+#   Kubernetes 的核心数据库。
+
+# ------------------------------------------------------------
+# 4.4 kube-apiserver (API 服务器)
+# ------------------------------------------------------------
+# kube-apiserver-k8s-master
+
+# Purpose:
+#   Entry point for all Kubernetes operations.
+#   所有 Kubernetes 操作的入口。
+
+# Example:
+#   kubectl commands interact with API server.
+#   kubectl 命令通过它与集群通信。
+
+# ------------------------------------------------------------
+# 4.5 kube-controller-manager (控制器管理器)
+# ------------------------------------------------------------
+# kube-controller-manager
+
+# Purpose:
+#   Maintains desired cluster state.
+#   负责维持集群的期望状态。
+
+# Example:
+#   If a Pod crashes → it recreates it automatically.
+#   Pod 崩溃时自动重建。
+
+# ------------------------------------------------------------
+# 4.6 kube-scheduler (调度器)
+# ------------------------------------------------------------
+# kube-scheduler
+
+# Purpose:
+#   Decides which node runs each Pod.
+#   决定 Pod 运行在哪个节点上。
+
+# ------------------------------------------------------------
+# 4.7 kube-proxy (网络代理)
+# ------------------------------------------------------------
+# kube-proxy
+
+# Purpose:
+#   Implements Service networking and load balancing.
+#   实现 Service 网络与负载均衡。
+
+# Enables:
+#   NodePort / ClusterIP access.
+#   支持 NodePort / ClusterIP 访问方式。
+
+# ------------------------------------------------------------
+# 5. Pod Status Explanation (Pod 状态说明)
+# ------------------------------------------------------------
+# Running:
+#   Pod is working normally.
+#   Pod 正常运行。
+
+# ContainerCreating:
+#   Pod is still starting (pulling image / setting network).
+#   Pod 正在启动（拉取镜像或配置网络）。
+
+# This is normal right after cluster setup.
+# 在集群刚启动时是正常现象。
+
+# ------------------------------------------------------------
+# 6. Overall Conclusion (总结)
+# ------------------------------------------------------------
+# If all nodes are Ready and system pods are Running:
+# 如果所有节点 Ready 且系统 Pod 正常：
+
+# → Kubernetes cluster is successfully deployed.
+# → Kubernetes 集群已经成功搭建完成。
+# ============================================================

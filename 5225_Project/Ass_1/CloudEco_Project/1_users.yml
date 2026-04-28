@@ -1,0 +1,23 @@
+---
+- name: Prepare users and sudo access
+  hosts: k8s_cluster
+  become: yes
+  tasks:
+    - name: Ensure ubuntu user exists
+      user:
+        name: "{{ ansible_user }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+
+    - name: Allow passwordless sudo for ansible user
+      copy:
+        dest: "/etc/sudoers.d/{{ ansible_user }}"
+        content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+
+    - name: Ensure apt cache is updated
+      apt:
+        update_cache: yes

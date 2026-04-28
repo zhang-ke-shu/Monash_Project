@@ -9,18 +9,37 @@ gcloud auth application-default login
 
 
 chmod +x install_tools.sh
-./install_tools.sh
+./01_install_tools.sh
 
 chmod +x auth_gcp.sh
-./auth_gcp.sh
+./02_auth_gcp.sh
 
 gcloud config set account kzha0139@student.monash.edu
 
+chmod +x 03_provision_infra.sh
+./03_provision_infra.sh
 
+chmod +x 04_configure_k8s_cluster.sh
+./04_configure_k8s_cluster.sh
 
+ansible -i ansible_hosts.ini masters -m shell -a "kubectl get pods -A"
 
+chmod +x 05_deploy_app.sh
+./05_deploy_app.sh
 
+ansible -i ansible_hosts.ini masters -m shell -a "kubectl get pods -o wide"
+ansible -i ansible_hosts.ini masters -m shell -a "kubectl get svc -o wide"
+ansible -i ansible_hosts.ini masters -m shell -a "kubectl get deployments -o wide"
 
+ansible -i ansible_hosts.ini masters -m shell -a "kubectl scale deployment wildlife-api-deployment --replicas=1"
+
+gcloud compute ssh k8s-master --zone australia-southeast1-a
+
+kubectl get pods -A -o wide
+
+kubectl get pods
+
+kubectl scale deployment wildlife-api-deployment --replicas=1
 
 
 # 0. 进入 VM 后，安装基础工具
