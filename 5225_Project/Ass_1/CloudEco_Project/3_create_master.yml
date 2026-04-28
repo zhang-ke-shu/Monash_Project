@@ -2,7 +2,12 @@
 - name: Initialise Kubernetes master node
   hosts: masters
   become: yes
+
   tasks:
+    # ------------------------------------------------------------
+    # 1. Reset previous Kubernetes state
+    # ------------------------------------------------------------
+
     - name: Reset previous Kubernetes state if any
       command: kubeadm reset -f
       ignore_errors: yes
@@ -13,10 +18,70 @@
         state: absent
       ignore_errors: yes
 
+    - name: Remove old CNI config
+      file:
+        path: /etc/cni/net.d
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove old etcd data
+      file:
+        path: /var/lib/etcd
+        state: absent
+      ignore_errors: yes
+
+    # ------------------------------------------------------------
+    # 2. Ensure container runtime is ready before kubeadm init
+    # ------------------------------------------------------------
+    # kubeadm needs a working CRI runtime.
+    # Here we explicitly restart containerd and wait for its socket.
+
+    - name: Restart containerd before kubeadm init
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Wait for containerd socket before kubeadm init
+      wait_for:
+        path: /run/containerd/containerd.sock
+        timeout: 90
+
+    - name: Verify containerd is active
+      command: systemctl is-active containerd
+      register: containerd_active
+      changed_when: false
+
+    - name: Print containerd active status
+      debug:
+        var: containerd_active.stdout
+
+    - name: Wait a few seconds for containerd CRI API to become ready
+      pause:
+        seconds: 8
+
+    - name: Restart kubelet before kubeadm init
+      systemd:
+        name: kubelet
+        state: restarted
+        enabled: yes
+      ignore_errors: yes
+
+    # ------------------------------------------------------------
+    # 3. Initialise Kubernetes control plane
+    # ------------------------------------------------------------
+    # The pod network CIDR must match Calico.
+    # The CRI socket is explicitly set to containerd.
+
     - name: Initialise Kubernetes control plane
-      command: kubeadm init --pod-network-cidr=192.168.0.0/16
+      command: kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket unix:///run/containerd/containerd.sock
       args:
         creates: /etc/kubernetes/admin.conf
+
+    # ------------------------------------------------------------
+    # 4. Configure kubeconfig for the ansible user
+    # ------------------------------------------------------------
 
     - name: Create kubeconfig directory for ansible user
       file:
@@ -35,9 +100,42 @@
         group: "{{ ansible_user }}"
         mode: "0600"
 
+    # ------------------------------------------------------------
+    # 5. Configure kube-proxy to use IPVS mode
+    # ------------------------------------------------------------
+
+    - name: Set kube-proxy mode to IPVS
+      become_user: "{{ ansible_user }}"
+      shell: |
+        kubectl get configmap kube-proxy -n kube-system -o yaml \
+        | sed 's/mode: ""/mode: "ipvs"/' \
+        | kubectl apply -f -
+      changed_when: true
+
+    - name: Restart kube-proxy daemonset
+      become_user: "{{ ansible_user }}"
+      command: kubectl rollout restart daemonset kube-proxy -n kube-system
+      changed_when: true
+
+    - name: Wait for kube-proxy rollout
+      become_user: "{{ ansible_user }}"
+      command: kubectl rollout status daemonset kube-proxy -n kube-system --timeout=300s
+      changed_when: false
+      ignore_errors: yes
+
+    # ------------------------------------------------------------
+    # 6. Install Calico CNI
+    # ------------------------------------------------------------
+
     - name: Install Calico CNI
       become_user: "{{ ansible_user }}"
       shell: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.2/manifests/calico.yaml
+      changed_when: true
+
+    # ------------------------------------------------------------
+    # 7. Generate worker join command
+    # ------------------------------------------------------------
+    # The join command also explicitly uses containerd as CRI runtime.
 
     - name: Generate worker join command
       command: kubeadm token create --print-join-command
@@ -46,7 +144,7 @@
     - name: Save join command on master
       copy:
         dest: /tmp/kubeadm_join_command.sh
-        content: "{{ join_command.stdout }}\n"
+        content: "{{ join_command.stdout }} --cri-socket unix:///run/containerd/containerd.sock\n"
         owner: root
         group: root
         mode: "0755"

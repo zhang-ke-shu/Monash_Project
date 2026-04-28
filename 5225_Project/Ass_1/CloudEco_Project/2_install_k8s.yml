@@ -2,7 +2,14 @@
 - name: Install Kubernetes dependencies on all nodes
   hosts: k8s_cluster
   become: yes
+
   tasks:
+    # ------------------------------------------------------------
+    # 1. Disable swap
+    # ------------------------------------------------------------
+    # Kubernetes requires swap to be disabled.
+    # If swap is enabled, kubelet may fail or behave unpredictably.
+
     - name: Disable swap immediately
       command: swapoff -a
       changed_when: false
@@ -13,12 +20,23 @@
         regexp: '^([^#].*\sswap\s.*)$'
         replace: '# \1'
 
-    - name: Load required kernel modules
+    # ------------------------------------------------------------
+    # 2. Load required kernel modules
+    # ------------------------------------------------------------
+    # overlay and br_netfilter are required for container networking.
+    # IPVS modules are added to support kube-proxy IPVS mode.
+
+    - name: Persist required kernel modules
       copy:
         dest: /etc/modules-load.d/k8s.conf
         content: |
           overlay
           br_netfilter
+          ip_vs
+          ip_vs_rr
+          ip_vs_wrr
+          ip_vs_sh
+          nf_conntrack
         owner: root
         group: root
         mode: "0644"
@@ -32,6 +50,37 @@
       modprobe:
         name: br_netfilter
         state: present
+
+    - name: Load ip_vs module
+      modprobe:
+        name: ip_vs
+        state: present
+
+    - name: Load ip_vs_rr module
+      modprobe:
+        name: ip_vs_rr
+        state: present
+
+    - name: Load ip_vs_wrr module
+      modprobe:
+        name: ip_vs_wrr
+        state: present
+
+    - name: Load ip_vs_sh module
+      modprobe:
+        name: ip_vs_sh
+        state: present
+
+    - name: Load nf_conntrack module
+      modprobe:
+        name: nf_conntrack
+        state: present
+
+    # ------------------------------------------------------------
+    # 3. Configure sysctl networking
+    # ------------------------------------------------------------
+    # These settings allow Kubernetes to correctly route bridged traffic
+    # and forward IPv4 packets between pods and services.
 
     - name: Configure Kubernetes networking sysctl settings
       copy:
@@ -48,7 +97,13 @@
       command: sysctl --system
       changed_when: false
 
-    - name: Install base packages
+    # ------------------------------------------------------------
+    # 4. Install base packages
+    # ------------------------------------------------------------
+    # containerd is the container runtime.
+    # ipvsadm and ipset are required for kube-proxy IPVS mode.
+
+    - name: Install base packages and IPVS tools
       apt:
         name:
           - containerd
@@ -56,8 +111,16 @@
           - ca-certificates
           - curl
           - gpg
+          - ipvsadm
+          - ipset
         state: present
         update_cache: yes
+
+        # ------------------------------------------------------------
+    # 5. Configure containerd
+    # ------------------------------------------------------------
+    # Force regenerate containerd config on every run.
+    # This avoids stale or broken containerd configuration from previous attempts.
 
     - name: Create containerd config directory
       file:
@@ -65,10 +128,8 @@
         state: directory
         mode: "0755"
 
-    - name: Generate default containerd config
+    - name: Regenerate containerd default config
       shell: containerd config default > /etc/containerd/config.toml
-      args:
-        creates: /etc/containerd/config.toml
 
     - name: Enable systemd cgroup driver for containerd
       replace:
@@ -76,11 +137,37 @@
         regexp: 'SystemdCgroup = false'
         replace: 'SystemdCgroup = true'
 
+    - name: Ensure CRI plugin is not disabled
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: '^disabled_plugins = \["cri"\]'
+        replace: 'disabled_plugins = []'
+      ignore_errors: yes
+
     - name: Restart and enable containerd
       systemd:
         name: containerd
         state: restarted
         enabled: yes
+        daemon_reload: yes
+
+    - name: Wait for containerd socket
+      wait_for:
+        path: /run/containerd/containerd.sock
+        timeout: 60
+
+    - name: Check containerd service status
+      command: systemctl is-active containerd
+      register: containerd_status
+      changed_when: false
+
+    - name: Print containerd status
+      debug:
+        var: containerd_status.stdout
+    # ------------------------------------------------------------
+    # 6. Add Kubernetes apt repository
+    # ------------------------------------------------------------
+    # --batch --yes is required so gpg works in non-interactive scripts.
 
     - name: Create apt keyrings directory
       file:
@@ -103,6 +190,10 @@
         owner: root
         group: root
         mode: "0644"
+
+    # ------------------------------------------------------------
+    # 7. Install Kubernetes components
+    # ------------------------------------------------------------
 
     - name: Install kubelet kubeadm kubectl
       apt:

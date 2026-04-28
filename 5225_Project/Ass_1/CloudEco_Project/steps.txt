@@ -40,12 +40,14 @@ kubectl get pods -A -o wide
 
 kubectl get pods
 
+
 kubectl scale deployment wildlife-api-deployment --replicas=1
 
 kubectl describe pod wildlife-api-deployment-xxxx
 
 kubectl logs <pod-name-1> --since=2m | wc -l
 
+kubectl logs wildlife-api-deployment-5f5cd7675f-6ntpn --since=2m | wc -l
 
 gcloud compute ssh k8s-worker-1 --zone australia-southeast1-a
 gcloud compute ssh k8s-worker-2 --zone australia-southeast1-a
@@ -54,6 +56,28 @@ sudo systemctl status kubelet
 sudo systemctl status containerd
 sudo crictl ps
 sudo crictl images
+
+(controller)
+ansible -i ansible_hosts.ini k8s_cluster -m shell -b -a "
+kubeadm reset -f || true
+systemctl stop kubelet || true
+systemctl stop containerd || true
+rm -rf /etc/kubernetes
+rm -rf /var/lib/etcd
+rm -rf /etc/cni/net.d
+rm -rf /var/lib/cni
+rm -rf /var/lib/kubelet
+rm -rf /run/flannel
+rm -rf /root/.kube
+rm -rf /home/kzha0139/.kube
+iptables -F || true
+iptables -t nat -F || true
+iptables -t mangle -F || true
+iptables -X || true
+ipvsadm --clear || true
+systemctl start containerd || true
+systemctl start kubelet || true
+"
 
 
 locust -f locustfile.py --host=http://<worker ip>:30080

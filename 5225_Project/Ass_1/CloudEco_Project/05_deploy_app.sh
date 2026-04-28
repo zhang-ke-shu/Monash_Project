@@ -155,18 +155,17 @@ kubectl rollout restart deployment/$DEPLOYMENT_NAME
 # 7. Wait for rollout
 # ------------------------------------------------------------
 
-echo "Waiting for deployment rollout..."
+echo "Waiting for deployment to become Available..."
 
 ansible -i ansible_hosts.ini masters -m shell -a "
-kubectl rollout status deployment/$DEPLOYMENT_NAME --timeout=300s
+kubectl wait --for=condition=Available deployment/$DEPLOYMENT_NAME --timeout=300s
 " || true
 
-echo "Waiting for application pods to become Ready..."
+echo "Checking current Ready application pods..."
 
 ansible -i ansible_hosts.ini masters -m shell -a "
-kubectl wait --for=condition=Ready pod -l app=$APP_LABEL --timeout=300s
-" || true
-
+kubectl get pods -l app=$APP_LABEL -o wide
+"
 # ------------------------------------------------------------
 # 8. Show final status
 # ------------------------------------------------------------

@@ -30,7 +30,7 @@ variable "zone" {
 }
 
 # VM machine type.
-# e2-custom-4-8192 means 4 vCPUs and 8 GB RAM, matching the assignment requirement.
+# e2-custom-4-8192 means 4 vCPUs and 8 GB RAM.
 variable "machine_type" {
   default = "e2-custom-4-8192"
 }
@@ -42,7 +42,7 @@ variable "machine_type" {
 # Create a custom VPC network for the self-managed Kubernetes cluster.
 # This avoids using the default network and makes the infrastructure fully defined by Terraform.
 resource "google_compute_network" "k8s_vpc" {
-  name                    = "self-managed-k8s-vpc" # Name of the VPC.
+  name                    = "self-managed-k8s-vpc" # Name of the custom VPC.
   auto_create_subnetworks = false                  # Disable automatic subnet creation for better control.
 }
 
@@ -59,77 +59,99 @@ resource "google_compute_subnetwork" "k8s_subnet" {
 # Firewall Rules
 # -------------------------------
 
-# Allow SSH access to the Kubernetes nodes.
-# This is required because the deployment script uses gcloud compute ssh to install kubeadm and configure the cluster.
+# Firewall rule 1: Allow SSH access from the Internet.
+# This is required so the controller VM, your local machine, or Google Cloud SSH
+# can connect to the master and worker VMs.
+#
+# This rule targets only VMs with the k8s-node tag.
 resource "google_compute_firewall" "allow_ssh" {
-  name    = "allow-k8s-ssh"                     # Firewall rule name.
-  network = google_compute_network.k8s_vpc.name # Apply this rule to the custom VPC.
+  name    = "allow-k8s-ssh"
+  network = google_compute_network.k8s_vpc.name
 
   allow {
-    protocol = "tcp"  # SSH uses TCP.
-    ports    = ["22"] # Port 22 is the standard SSH port.
+    protocol = "tcp"
+    ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"] # Allow SSH from anywhere. This is convenient for testing.
-  target_tags   = ["k8s-node"]  # Apply only to VMs with the k8s-node tag.
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["k8s-node"]
 }
 
-# Allow internal communication between Kubernetes nodes.
-# Kubernetes requires nodes, pods, kubelet, container runtime, and network plugin components to communicate internally.
-resource "google_compute_firewall" "allow_k8s_internal" {
-  name    = "allow-k8s-internal"                # Firewall rule name.
-  network = google_compute_network.k8s_vpc.name # Apply this rule to the custom VPC.
-
-  allow {
-    protocol = "tcp"       # Allow internal TCP traffic.
-    ports    = ["0-65535"] # Allow all TCP ports between cluster nodes.
-  }
-
-  allow {
-    protocol = "udp"       # Allow internal UDP traffic.
-    ports    = ["0-65535"] # Allow all UDP ports between cluster nodes.
-  }
-
-  allow {
-    protocol = "icmp" # Allow ping and other ICMP traffic for diagnostics.
-  }
-
-  source_ranges = [
-    "10.10.0.0/24",  # VM subnet range.
-    "192.168.0.0/16" # Pod network range used by Calico.
-  ]
-
-  target_tags = ["k8s-node"] # Apply to all Kubernetes nodes.
-}
-
-# Allow access to the Kubernetes API server.
-# Port 6443 is used by kube-apiserver on the master node.
+# Firewall rule 2: Allow external access to the Kubernetes API server.
+# Port 6443 is used by the Kubernetes API server on the master node.
+#
+# This rule is useful for kubeadm control-plane access and cluster management.
 resource "google_compute_firewall" "allow_k8s_api" {
-  name    = "allow-k8s-api"                     # Firewall rule name.
-  network = google_compute_network.k8s_vpc.name # Apply this rule to the custom VPC.
+  name    = "allow-k8s-api"
+  network = google_compute_network.k8s_vpc.name
 
   allow {
-    protocol = "tcp"    # Kubernetes API uses TCP.
-    ports    = ["6443"] # Default Kubernetes API server port.
+    protocol = "tcp"
+    ports    = ["6443"]
   }
 
-  source_ranges = ["0.0.0.0/0"]  # Allow external kubectl access during testing.
-  target_tags   = ["k8s-master"] # Apply only to the master node.
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["k8s-master"]
 }
 
-# Allow external access to the application through NodePort.
-# The Kubernetes Service exposes the FastAPI application on port 30080.
+# Firewall rule 3: Allow external access to the application NodePort.
+# The application service exposes FastAPI through NodePort 30080.
+#
+# External users and Locust can access the API through:
+# http://WORKER_EXTERNAL_IP:30080/docs
 resource "google_compute_firewall" "allow_nodeport" {
-  name    = "allow-wildlife-nodeport"           # Firewall rule name.
-  network = google_compute_network.k8s_vpc.name # Apply this rule to the custom VPC.
+  name    = "allow-k8s-nodeport"
+  network = google_compute_network.k8s_vpc.name
 
   allow {
-    protocol = "tcp"     # HTTP traffic uses TCP.
-    ports    = ["30080"] # NodePort used by the Kubernetes Service.
+    protocol = "tcp"
+    ports    = ["30080"]
   }
 
-  source_ranges = ["0.0.0.0/0"] # Allow users and Locust clients to access the API externally.
-  target_tags   = ["k8s-node"]  # Apply to all Kubernetes nodes.
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["k8s-node"]
+}
+
+# Firewall rule 4: Allow internal communication between Kubernetes nodes.
+# This is essential for a self-managed Kubernetes cluster.
+#
+# Kubernetes nodes need unrestricted internal traffic for:
+# - pod-to-pod communication
+# - service routing
+# - kubelet communication
+# - CoreDNS traffic
+# - Calico networking
+# - kube-proxy forwarding
+# - Kubernetes control-plane and worker communication
+#
+# This rule does NOT expose all ports to the Internet.
+# It only allows traffic where both the source and target are VMs tagged as k8s-node.
+resource "google_compute_firewall" "allow_internal_k8s_node_traffic" {
+  name    = "allow-k8s-internal-node-traffic"
+  network = google_compute_network.k8s_vpc.name
+
+  allow {
+    protocol = "all"
+  }
+
+  source_tags = ["k8s-node"]
+  target_tags = ["k8s-node"]
+}
+
+# Firewall rule 5: Allow health check / HTTP access if needed.
+# Port 80 is optional for this project, but keeping it open is useful
+# if the deployment later adds HTTP-based ingress or simple web checks.
+resource "google_compute_firewall" "allow_http" {
+  name    = "allow-k8s-http"
+  network = google_compute_network.k8s_vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["k8s-node"]
 }
 
 # -------------------------------
@@ -152,12 +174,11 @@ resource "google_compute_instance" "k8s_master" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.k8s_subnet.id # Attach VM to the custom subnet.
-
-    access_config {} # Assign an external public IP address.
+    access_config {}                                     # Assign an external public IP address.
   }
 
   tags = [
-    "k8s-node",  # General tag for all Kubernetes nodes.
+    "k8s-node",   # General tag for all Kubernetes nodes.
     "k8s-master" # Specific tag for master firewall rules.
   ]
 
@@ -186,13 +207,12 @@ resource "google_compute_instance" "k8s_workers" {
   }
 
   network_interface {
-    subnetwork = google_compute_subnetwork.k8s_subnet.id # Attach VM to the same subnet as master.
-
-    access_config {} # Assign an external public IP address.
+    subnetwork = google_compute_subnetwork.k8s_subnet.id # Attach VM to the same custom subnet.
+    access_config {}                                     # Assign an external public IP address.
   }
 
   tags = [
-    "k8s-node",  # General tag for all Kubernetes nodes.
+    "k8s-node",   # General tag for all Kubernetes nodes.
     "k8s-worker" # Specific tag for worker nodes.
   ]
 
@@ -206,7 +226,7 @@ resource "google_compute_instance" "k8s_workers" {
 # -------------------------------
 
 # Output the public IP address of the master node.
-# This is useful for SSH, kubectl access, and checking the cluster.
+# This is useful for SSH and cluster management.
 output "master_external_ip" {
   value = google_compute_instance.k8s_master.network_interface[0].access_config[0].nat_ip
 }
