@@ -178,7 +178,7 @@ resource "google_compute_instance" "k8s_master" {
   }
 
   tags = [
-    "k8s-node",   # General tag for all Kubernetes nodes.
+    "k8s-node",  # General tag for all Kubernetes nodes.
     "k8s-master" # Specific tag for master firewall rules.
   ]
 
@@ -212,7 +212,7 @@ resource "google_compute_instance" "k8s_workers" {
   }
 
   tags = [
-    "k8s-node",   # General tag for all Kubernetes nodes.
+    "k8s-node",  # General tag for all Kubernetes nodes.
     "k8s-worker" # Specific tag for worker nodes.
   ]
 

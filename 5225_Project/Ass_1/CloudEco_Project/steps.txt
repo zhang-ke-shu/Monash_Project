@@ -1,20 +1,29 @@
 # Copy project folder to VM
 gcloud compute scp --recurse \
 "/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
-kzha0139@instance-20260428-120646:~ \
+kzha0139@instance-20260429-070738:~ \
+--zone australia-southeast1-a
+
+gcloud compute scp 01_install_tools.sh \
+kzha0139@instance-20260429-070738:~/5225/ \
 --zone australia-southeast1-a
 
 gcloud auth login
 gcloud auth application-default login
 
 
-chmod +x install_tools.sh
+chmod +x 01_install_tools.sh
 ./01_install_tools.sh
 
-chmod +x auth_gcp.sh
+source ansible-venv/bin/activate
+
+chmod +x 02_auth_gcp.sh
 ./02_auth_gcp.sh
 
 gcloud config set account kzha0139@student.monash.edu
+
+chmod +x 0X_build_push_images.sh
+./0X_build_push_images.sh
 
 chmod +x 03_provision_infra.sh
 ./03_provision_infra.sh
@@ -81,7 +90,7 @@ systemctl start kubelet || true
 
 
 locust -f locustfile.py --host=http://<worker ip>:30080
-locust -f locustfile.py --host=http://35.201.20.110:30080
+locust -f locustfile.py --host=http://34.151.179.167:30080
 
 # 0. 进入 VM 后，安装基础工具
 sudo apt update
