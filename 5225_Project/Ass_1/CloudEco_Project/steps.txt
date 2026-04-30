@@ -1,11 +1,11 @@
 # Copy project folder to VM
 gcloud compute scp --recurse \
 "/Users/apple/Desktop/5225 cloud computing and security/Ass 1/提交/5225" \
-kzha0139@instance-20260429-070738:~ \
+kzha0139@<name>:~ \
 --zone australia-southeast1-a
 
 gcloud compute scp 01_install_tools.sh \
-kzha0139@instance-20260429-070738:~/5225/ \
+kzha0139@<name>:~/5225/ \
 --zone australia-southeast1-a
 
 gcloud auth login
@@ -15,7 +15,9 @@ gcloud auth application-default login
 chmod +x 01_install_tools.sh
 ./01_install_tools.sh
 
+cd
 source ansible-venv/bin/activate
+cd 5225
 
 chmod +x 02_auth_gcp.sh
 ./02_auth_gcp.sh
@@ -49,8 +51,12 @@ kubectl get pods -A -o wide
 
 kubectl get pods
 
-
 kubectl scale deployment wildlife-api-deployment --replicas=1
+
+locust -f locustfile.py --host=http://<worker ip>:30080
+locust -f locustfile.py --host=http://34.40.252.123:30080
+
+
 
 kubectl describe pod wildlife-api-deployment-xxxx
 
@@ -90,7 +96,7 @@ systemctl start kubelet || true
 
 
 locust -f locustfile.py --host=http://<worker ip>:30080
-locust -f locustfile.py --host=http://34.151.179.167:30080
+locust -f locustfile.py --host=http://34.40.252.123:30080
 
 # 0. 进入 VM 后，安装基础工具
 sudo apt update
