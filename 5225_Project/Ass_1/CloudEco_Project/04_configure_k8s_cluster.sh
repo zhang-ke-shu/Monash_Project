@@ -42,7 +42,7 @@ fi
 
 if ! command -v ansible >/dev/null 2>&1; then
   echo "ERROR: ansible command not found."
-  echo "Please run ./install_tools.sh first."
+  echo "Please run ./01_install_tools.sh first."
   exit 1
 fi
 
