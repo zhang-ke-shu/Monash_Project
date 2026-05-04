@@ -14,7 +14,7 @@ Main technologies used:
 * Kubernetes
 * Locust
 
-Cluster structure:
+Cluster structure(Ubuntu 22.04 LTS):
 
 * 1 controller VM
 * 1 Kubernetes master node
@@ -121,7 +121,7 @@ gcloud auth application-default login
 If needed, set the account explicitly:
 
 ```bash
-gcloud config set account kzha0139@student.monash.edu
+gcloud config set account <account>
 ```
 
 Then run:
