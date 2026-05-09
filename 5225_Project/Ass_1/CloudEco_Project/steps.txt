@@ -204,6 +204,6 @@ docker image prune -a -f
 terraform destroy
 kubectl delete pods 
 kubectl delete pods --all
-
+kubectl delete deployment wildlife-api-deployment --namespace=default
 
 
