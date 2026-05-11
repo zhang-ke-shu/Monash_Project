@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <title>Network Visualisation in D3</title>
+        <style>
+            .node {
+                stroke: #fff;
+                stroke-width: 1.5px;
+                fill: #999;
+            }
+            .link {
+                stroke: #999;
+                stroke-opacity: 0.6;
+                stroke-width: 1.5px;
+            }
+        </style>
+    </head>
+    <body>
+        <svg></svg>
+  
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+            // define the dimensions of the visualisation
+            const width = 800,
+            height = 800;
+ 
+            // get the svg object from the body of the page and set its dimensions
+            const svg = d3.select("svg")
+                .attr("width", width)
+                .attr("height", height);
+ 
+            d3.json("fifth.json").then(function(data) {
+ 
+                // construct the force layout for the links and nodes
+                const forceLink = d3.forceLink(data.links).id(function(d) { return d.id; });
+                const forceNode = d3.forceManyBody();
+ 
+                // set up the force simulation
+                const simulation = d3.forceSimulation()
+                    .nodes(data.nodes)
+                    .force("link", forceLink)
+                    .force("charge", forceNode)
+                    .force("center", d3.forceCenter(width/2, height/2))
+                    .on("tick", ticked); // call the tick function defined after adding nodes and links
+ 
+                // add the links
+                const link = svg.selectAll(".link")
+                    .data(data.links)
+                    .join("line")
+                    .attr("class", "link")
+                    .attr("stroke", "black");
+ 
+                // add each node as a group for the circle and label elements added below
+                const node = svg.selectAll(".node")
+                    .data(data.nodes)
+                    .join("g"); 
+ 
+                // set the radius of nodes
+                const r = 5;
+ 
+                // add the circle to the node
+                node
+                    .append("circle")
+                    .attr("class", "node")
+                    .attr("r", r);
+ 
+                // add the label to the node
+                node.append("text")
+                    .attr("y", -r)
+                    .attr("text-anchor", "middle")
+                    .text(function(d) { return d.id; }); // use the node id as label for the node
+ 
+                // define the tick function for the simulation to position nodes and links
+                function ticked() {
+                    link
+                        .attr("x1", function(d) { return d.source.x; })
+                        .attr("y1", function(d) { return d.source.y; })
+                        .attr("x2", function(d) { return d.target.x; })
+                        .attr("y2", function(d) { return d.target.y; });
+
+                    node
+                        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+                }
+            });
+        </script>
+    </body>
+</html>

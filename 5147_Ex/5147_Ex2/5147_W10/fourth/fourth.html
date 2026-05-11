@@ -1,0 +1,119 @@
+<html>
+    <head>
+        <title>Grouped bar chart in D3</title>
+        <style>
+            .svgCanvas {
+                border: solid 1px
+            }
+        </style>
+    </head>
+    <body>
+        <svg></svg>
+  
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+            window.onload = function() {
+                // Canvas width and height
+                let width = 600;
+                let height = 300;
+ 
+                // Create a SVG canvas
+                const thisCanvas = d3.select("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("class", "svgCanvas");
+ 
+                // We want some margin between the boundary of the canvas and the bar charts
+                const margin = {top: 10, right: 20, bottom: 30, left: 50};
+                width = width - margin.left - margin.right;
+                height = height - margin.top - margin.bottom;
+ 
+                // create the area to draw the bar chart
+                // g is a SVG element to group multiple SVG elements
+                // Now we can make the graph
+                const barChartArea = thisCanvas
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+ 
+                // Set up a helper function to divide the x axis
+                const x0 = d3.scaleBand()
+                    .rangeRound([0, width])
+                    .paddingInner(0.2); // padding between different groups
+ 
+                // two properties for each group
+                const keys = ["income", "spend"];
+                // Set up a helper function to divide the x axis **within** a group
+                const x1 = d3.scaleBand()
+                    .padding(0.1); // padding between different properties within a group
+ 
+                // helper function to calculate the height of each bar
+                const y = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+
+                // get the data
+                d3.csv("fourth.csv").then(function(data) {
+                    console.log(data);
+ 
+                // for different groups
+                x0.domain(data.map(function(d) { return d["name"]; }));
+                // for properties within a group
+                x1.domain(keys).rangeRound([0, x0.bandwidth()]);
+                // for bar height
+                y.domain([0, d3.max(data, function(d) {
+                        return d3.max(keys, function(key) {
+                            return parseInt(d[key]);
+                        });
+                    })
+                ]);
+ 
+                // Now we can make the graph
+                barChartArea.append("g")
+                    .selectAll("g")
+                    .data(data)
+                    .join("g")
+                    // create groups
+                    .attr("transform", function(d) { return "translate(" + x0(d["name"]) + ",0)"; })
+                    .selectAll("rect")
+                    // pre-processing the data
+                    .data(function(d) { return keys.map(function(key) {
+                        return {
+                            key: key,
+                            value: d[key],
+                            name: d["name"]
+                        };
+                    })
+                    })
+                    .join("rect")
+                    // start drawing bars for each property and each group
+                    .attr("x", function(d) { return x1(d["key"]); })
+                    .attr("y", function(d) { return y(d["value"]); })
+                    .attr("width", x1.bandwidth())
+                    .attr("height", function(d) { return height - y(d["value"]); })
+                    .attr("fill", function(d) {
+                        if(d["key"] === "income") {
+                            return "lightgreen";
+                        }
+                        else if(d["key"] === "spend") {
+                            return "red";
+                        }
+                     });
+ 
+                // add x axis with ticks
+                barChartArea.append("g")
+                    .attr("class", "axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x0));
+ 
+                // add y axis with ticks
+                barChartArea.append("g")
+                    .attr("class", "axis")
+                    .call(d3.axisLeft(y).ticks(null, "s"))
+                    .append("text")
+                    .attr("x", 2)
+                    .attr("y", y(y.ticks().pop()) + 0.5)
+                    .attr("dy", "0.32em");
+                });
+            }
+        </script>
+    </body>
+</html>
