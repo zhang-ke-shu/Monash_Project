@@ -4,7 +4,7 @@ library(readr)
 
 analysis_data <- read_csv("data/analysis_data.csv")
 
-# 1. 基础清理
+# 1.
 analysis_clean <- analysis_data %>%
   mutate(
     species = as.character(species),
@@ -26,7 +26,7 @@ analysis_clean <- analysis_data %>%
     !is.na(avg_rad)
   )
 
-# 2. Species summary：Step 1 用
+# 2. Species summary
 species_summary <- analysis_clean %>%
   group_by(species) %>%
   summarise(
@@ -36,8 +36,7 @@ species_summary <- analysis_clean %>%
     .groups = "drop"
   )
 
-# 3. Map data：中间澳洲地图用
-# 这里先按 LGA + species + year + month 聚合，避免 Shiny 直接加载上百万点
+# 3. Map data
 map_data <- analysis_clean %>%
   group_by(LGA_CODE25, LGA_NAME25, species, year, month) %>%
   summarise(
@@ -54,7 +53,7 @@ map_data <- analysis_clean %>%
     obs_density = obs_count / area_sqkm
   )
 
-# 4. Calendar data：Step 2 的月份热力图用
+# 4. Calendar data
 calendar_data <- analysis_clean %>%
   group_by(species, month) %>%
   summarise(
@@ -62,7 +61,7 @@ calendar_data <- analysis_clean %>%
     .groups = "drop"
   )
 
-# 5. Human density relationship：Step 3 用
+# 5. Human density relationship
 density_relation_data <- analysis_clean %>%
   group_by(LGA_CODE25, LGA_NAME25, species) %>%
   summarise(
@@ -81,7 +80,7 @@ density_relation_data <- analysis_clean %>%
     log_obs_density = log10(obs_density + 1)
   )
 
-# 6. Urban zone data：Step 4 用
+# 6. Urban zone data
 human_threshold <- median(density_relation_data$ERP_Density, na.rm = TRUE)
 light_threshold <- median(density_relation_data$avg_rad, na.rm = TRUE)
 
@@ -105,7 +104,6 @@ zone_data <- density_relation_data %>%
     )
   )
 
-# 7. 输出给 Shiny 使用的 CSV
 write_csv(species_summary, "data/species_summary.csv")
 write_csv(map_data, "data/map_data.csv")
 write_csv(calendar_data, "data/calendar_data.csv")

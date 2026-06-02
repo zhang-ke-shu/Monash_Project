@@ -58,9 +58,9 @@ species_colours <- c(
 )
 
 pretty_species <- c(
-  "Cacatua galerita" = "Sulphur-crested Cockatoo",
-  "Trichoglossus moluccanus" = "Rainbow Lorikeet",
-  "Eolophus roseicapilla" = "Galah"
+  "Cacatua galerita" = "Cacatua galerita",
+  "Trichoglossus moluccanus" = "Trichoglossus moluccanus",
+  "Eolophus roseicapilla" = "Eolophus roseicapilla"
 )
 
 zone_colours <- c(
@@ -112,6 +112,37 @@ add_point_style <- function(data, selected, colour_column, base_opacity) {
   }
   
   data
+}
+
+make_pie_marker_records <- function(data, total_column = "total_obs") {
+  lapply(seq_len(nrow(data)), function(i) {
+    row <- data[i, ]
+    
+    cacatua_count <- as.numeric(row[["Cacatua galerita"]])
+    trichoglossus_count <- as.numeric(row[["Trichoglossus moluccanus"]])
+    eolophus_count <- as.numeric(row[["Eolophus roseicapilla"]])
+    pie_total <- cacatua_count + trichoglossus_count + eolophus_count
+    
+    angle_1 <- ifelse(pie_total > 0, cacatua_count / pie_total * 360, 0)
+    angle_2 <- ifelse(pie_total > 0, angle_1 + trichoglossus_count / pie_total * 360, angle_1)
+    
+    list(
+      id = as.character(row$LGA_CODE25),
+      lat = as.numeric(row$lat),
+      lon = as.numeric(row$lon),
+      radius = as.numeric(make_radius(row[[total_column]])),
+      opacity = as.numeric(row$point_opacity),
+      weight = as.numeric(row$point_weight),
+      stroke_colour = as.character(row$point_stroke_colour),
+      is_selected = isTRUE(row$is_selected),
+      popup = as.character(row$popup_text),
+      gradient = paste0(
+        species_colours["Cacatua galerita"], " 0deg ", angle_1, "deg, ",
+        species_colours["Trichoglossus moluccanus"], " ", angle_1, "deg ", angle_2, "deg, ",
+        species_colours["Eolophus roseicapilla"], " ", angle_2, "deg 360deg"
+      )
+    )
+  })
 }
 
 apply_alpha <- function(cols, alphas) {
@@ -386,9 +417,22 @@ ui <- fluidPage(
       }
 
       .control-title {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 700;
         margin-bottom: 10px;
+      }
+
+      .month-checks .checkbox-inline {
+        margin-right: 6px;
+        margin-bottom: 6px;
+        padding: 4px 8px;
+        background-color: #ffffff;
+        border: 1px solid #d9d9d9;
+        border-radius: 8px;
+      }
+
+      .month-checks .checkbox-inline input {
+        margin-right: 4px;
       }
 
       .selected-title {
@@ -406,6 +450,70 @@ ui <- fluidPage(
         font-size: 12px;
         color: #666666;
         line-height: 1.35;
+      }
+
+      .parrot-pie-icon {
+        background: transparent;
+        border: none;
+      }
+
+      .parrot-pie-marker {
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+      }
+
+      .control-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 2.2fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .main-layout {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+
+      .left-sidebar {
+        flex: 0 0 calc(30% - 7px);
+        max-width: calc(30% - 7px);
+      }
+
+      .map-section {
+        flex: 0 0 calc(70% - 7px);
+        max-width: calc(70% - 7px);
+      }
+
+      .control-grid {
+        display: block;
+      }
+
+      .control-grid > div {
+        margin-bottom: 12px;
+      }
+
+      .under-map-cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      @media (max-width: 1100px) {
+        .control-grid,
+        .under-map-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .main-layout {
+          display: block;
+        }
+
+        .left-sidebar,
+        .map-section {
+          max-width: 100%;
+          width: 100%;
+        }
       }
     ")),
     
@@ -449,6 +557,111 @@ ui <- fluidPage(
           currentBackgroundOverlay.addTo(map);
         }
       });
+
+      var currentPieMarkerLayer = null;
+
+      function renderPieMarkers(message, attempt) {
+        var widget = HTMLWidgets.find('#map');
+
+        if (!widget) {
+          if (attempt < 30) {
+            setTimeout(function() {
+              renderPieMarkers(message, attempt + 1);
+            }, 100);
+          }
+          return;
+        }
+
+        var map = widget.getMap();
+
+        if (!map) {
+          if (attempt < 30) {
+            setTimeout(function() {
+              renderPieMarkers(message, attempt + 1);
+            }, 100);
+          }
+          return;
+        }
+
+        if (currentPieMarkerLayer) {
+          map.removeLayer(currentPieMarkerLayer);
+          currentPieMarkerLayer = null;
+        }
+
+        if (message.action !== 'add') {
+          return;
+        }
+
+        currentPieMarkerLayer = L.layerGroup();
+
+        message.markers.forEach(function(markerData) {
+          var diameter = markerData.radius * 2;
+          var borderWidth = markerData.weight;
+
+          var markerHtml = '<div class=\"parrot-pie-marker\" style=\"' +
+            'width:' + diameter + 'px;' +
+            'height:' + diameter + 'px;' +
+            'border-radius:50%;' +
+            'background: conic-gradient(' + markerData.gradient + ');' +
+            'opacity:' + markerData.opacity + ';' +
+            'border:' + borderWidth + 'px solid ' + markerData.stroke_colour + ';' +
+            'box-sizing:border-box;' +
+            '\"></div>';
+
+          var icon = L.divIcon({
+            html: markerHtml,
+            className: 'parrot-pie-icon',
+            iconSize: [diameter + borderWidth * 2, diameter + borderWidth * 2],
+            iconAnchor: [diameter / 2 + borderWidth, diameter / 2 + borderWidth]
+          });
+
+          var marker = L.marker([markerData.lat, markerData.lon], {
+            icon: icon,
+            interactive: true,
+            zIndexOffset: markerData.is_selected ? 1000 : 0
+          });
+
+          marker.on('click', function() {
+            Shiny.setInputValue('map_marker_click', {id: markerData.id}, {priority: 'event'});
+          });
+
+          marker.bindPopup(markerData.popup);
+          marker.addTo(currentPieMarkerLayer);
+        });
+
+        currentPieMarkerLayer.addTo(map);
+      }
+
+      Shiny.addCustomMessageHandler('pieMarkers', function(message) {
+        renderPieMarkers(message, 0);
+      });
+
+      function notifyMapReady(attempt) {
+        var widget = HTMLWidgets.find('#map');
+
+        if (!widget || !widget.getMap()) {
+          if (attempt < 60) {
+            setTimeout(function() {
+              notifyMapReady(attempt + 1);
+            }, 100);
+          }
+          return;
+        }
+
+        Shiny.setInputValue('map_ready', Math.random(), {priority: 'event'});
+      }
+
+      $(document).on('shiny:connected', function() {
+        notifyMapReady(0);
+      });
+
+      $(document).on('shiny:value', function(event) {
+        if (event.name === 'map') {
+          setTimeout(function() {
+            notifyMapReady(0);
+          }, 100);
+        }
+      });
     "))
   ),
   
@@ -460,73 +673,77 @@ ui <- fluidPage(
   
   uiOutput("narrative_panel"),
   
-  fluidRow(
-    column(
-      width = 3,
-      
+  div(
+    class = "main-layout",
+    div(
+      class = "left-sidebar",
       div(
         class = "panel-card",
         div(class = "control-title", "Control Panel"),
-        
-        radioButtons(
-          inputId = "story_step",
-          label = "Story step:",
-          choices = c(
-            "Step 1: Meet the parrots",
-            "Step 2: Where and when?",
-            "Step 3: Human density",
-            "Step 4: Nighttime light"
+        div(
+          class = "control-grid",
+          div(
+            radioButtons(
+              inputId = "story_step",
+              label = "Story step:",
+              choices = c(
+                "Step 1: Meet the parrots",
+                "Step 2: Where and when?",
+                "Step 3: Human density",
+                "Step 4: Nighttime light"
+              ),
+              selected = "Step 1: Meet the parrots"
+            )
           ),
-          selected = "Step 1: Meet the parrots"
-        ),
-        
-        selectInput(
-          inputId = "species_filter",
-          label = "Choose species:",
-          choices = c("All", sort(unique(map_data$species))),
-          selected = "All"
-        ),
-        
-        sliderInput(
-          inputId = "month_filter",
-          label = "Choose month range:",
-          min = 1,
-          max = 12,
-          value = c(1, 12),
-          step = 1
+          div(
+            selectInput(
+              inputId = "species_filter",
+              label = "Choose species:",
+              choices = c("All", sort(unique(map_data$species))),
+              selected = "All"
+            )
+          ),
+          div(
+            class = "month-checks",
+            checkboxGroupInput(
+              inputId = "month_filter",
+              label = "Choose months:",
+              choices = c(
+                "All" = "All",
+                setNames(as.character(1:12), as.character(1:12))
+              ),
+              selected = "All",
+              inline = TRUE
+            )
+          )
         )
       ),
-      
       div(
         class = "panel-card",
         div(class = "control-title", "Linked Insight Chart"),
-        plotlyOutput("linked_chart", height = "390px")
+        plotlyOutput("linked_chart", height = "480px")
       )
     ),
-    
-    column(
-      width = 7,
-      leafletOutput("map", height = "720px")
-    ),
-    
-    column(
-      width = 2,
+    div(
+      class = "map-section",
+      leafletOutput("map", height = "720px"),
       div(
-        class = "panel-card",
-        uiOutput("selected_location")
-      ),
-      
-      div(
-        class = "panel-card",
-        uiOutput("step_guide")
-      ),
-      
-      div(
-        class = "panel-card",
-        div(class = "selected-title", "Caution"),
+        class = "under-map-cards",
         div(
-          class = "small-note",
-          "Observation records show where birds were reported. They do not directly prove true habitat preference, and may also reflect where people are more likely to observe and record birds."
+          class = "panel-card",
+          uiOutput("selected_location")
+        ),
+        div(
+          class = "panel-card",
+          uiOutput("step_guide")
+        ),
+        div(
+          class = "panel-card",
+          div(class = "selected-title", "Caution"),
+          div(
+            class = "small-note",
+            "Observation records show where birds were reported. They do not directly prove true habitat preference, and may also reflect where people are more likely to observe and record birds."
+          )
         )
       )
     )
@@ -546,8 +763,8 @@ server <- function(input, output, session) {
       div(
         class = "narrative-card",
         h4("Step 1: Meet the parrots — who are the main characters?"),
-        p("This story begins with three common Australian parrots: Sulphur-crested Cockatoo, Rainbow Lorikeet, and Galah."),
-        p("Use the map to see where these species are recorded. Symbol size represents observation volume, while colour identifies the dominant or selected species.")
+        p("This story begins with three common Australian parrots: Cacatua galerita, Trichoglossus moluccanus, and Eolophus roseicapilla."),
+        p("Use the map to see where these species are recorded. Symbol size represents total observation volume, while each symbol is divided by the three species' observation proportions.")
       )
     } else if (input$story_step == "Step 2: Where and when?") {
       div(
@@ -573,11 +790,20 @@ server <- function(input, output, session) {
     }
   })
   
+  selected_months <- reactive({
+    months <- input$month_filter
+    
+    if (is.null(months) || length(months) == 0 || "All" %in% months) {
+      return(1:12)
+    }
+    
+    as.integer(months)
+  })
+  
   filtered_base <- reactive({
     map_data %>%
       filter(
-        month >= input$month_filter[1],
-        month <= input$month_filter[2]
+        month %in% selected_months()
       )
   })
   
@@ -682,11 +908,18 @@ server <- function(input, output, session) {
   })
   
   observe({
+    req(input$map_ready)
+    
     step <- input$story_step
     selected <- selected_lga()
     
     session$sendCustomMessage(
       "backgroundOverlay",
+      list(action = "remove")
+    )
+    
+    session$sendCustomMessage(
+      "pieMarkers",
       list(action = "remove")
     )
     
@@ -715,35 +948,28 @@ server <- function(input, output, session) {
               "<b>LGA:</b> ", LGA_NAME25, "<br>",
               "<b>Total observations:</b> ", total_obs, "<br>",
               "<b>Dominant species:</b> ", dominant_label, "<br>",
-              "<b>Cockatoo:</b> ", `Cacatua galerita`, "<br>",
-              "<b>Lorikeet:</b> ", `Trichoglossus moluccanus`, "<br>",
-              "<b>Galah:</b> ", `Eolophus roseicapilla`, "<br>",
+              "<b>Cacatua galerita:</b> ", `Cacatua galerita`, "<br>",
+              "<b>Trichoglossus moluccanus:</b> ", `Trichoglossus moluccanus`, "<br>",
+              "<b>Eolophus roseicapilla:</b> ", `Eolophus roseicapilla`, "<br>",
               "<b>Human density:</b> ", round(ERP_Density, 2), "<br>",
               "<b>Nighttime light:</b> ", round(avg_rad, 2)
             )
           )
         
+        session$sendCustomMessage(
+          "pieMarkers",
+          list(
+            action = "add",
+            markers = make_pie_marker_records(data, total_column = "total_obs")
+          )
+        )
+        
         proxy %>%
-          addCircleMarkers(
-            data = data,
-            lng = ~lon,
-            lat = ~lat,
-            radius = ~make_radius(total_obs),
-            color = ~point_stroke_colour,
-            fillColor = ~dominant_colour,
-            fillOpacity = ~point_opacity,
-            opacity = ~ifelse(is_selected, 1, point_opacity),
-            stroke = TRUE,
-            weight = ~point_weight,
-            layerId = ~as.character(LGA_CODE25),
-            popup = ~popup_text,
-            group = "observations"
-          ) %>%
           addLegend(
-            position = "bottomright",
+            position = "bottomleft",
             colors = unname(species_colours[species_levels]),
             labels = unname(pretty_species[species_levels]),
-            title = "Dominant species"
+            title = "Species proportion"
           )
         
       } else {
@@ -786,7 +1012,7 @@ server <- function(input, output, session) {
             group = "observations"
           ) %>%
           addLegend(
-            position = "bottomright",
+            position = "bottomleft",
             colors = unname(species_colours[input$species_filter]),
             labels = unname(pretty_species[input$species_filter]),
             title = "Selected species"
@@ -854,35 +1080,28 @@ server <- function(input, output, session) {
               "<b>LGA:</b> ", LGA_NAME25, "<br>",
               "<b>Total observations:</b> ", total_obs, "<br>",
               "<b>Dominant species:</b> ", dominant_label, "<br>",
-              "<b>Cockatoo:</b> ", `Cacatua galerita`, "<br>",
-              "<b>Lorikeet:</b> ", `Trichoglossus moluccanus`, "<br>",
-              "<b>Galah:</b> ", `Eolophus roseicapilla`, "<br>",
+              "<b>Cacatua galerita:</b> ", `Cacatua galerita`, "<br>",
+              "<b>Trichoglossus moluccanus:</b> ", `Trichoglossus moluccanus`, "<br>",
+              "<b>Eolophus roseicapilla:</b> ", `Eolophus roseicapilla`, "<br>",
               "<b>Human density:</b> ", round(ERP_Density, 2), "<br>",
               "<b>Matched nightlight:</b> ", round(avg_rad, 2)
             )
           )
         
+        session$sendCustomMessage(
+          "pieMarkers",
+          list(
+            action = "add",
+            markers = make_pie_marker_records(obs_data, total_column = "total_obs")
+          )
+        )
+        
         proxy %>%
-          addCircleMarkers(
-            data = obs_data,
-            lng = ~lon,
-            lat = ~lat,
-            radius = ~make_radius(total_obs),
-            color = ~point_stroke_colour,
-            fillColor = ~dominant_colour,
-            fillOpacity = ~point_opacity,
-            opacity = ~ifelse(is_selected, 1, point_opacity),
-            stroke = TRUE,
-            weight = ~point_weight,
-            layerId = ~as.character(LGA_CODE25),
-            popup = ~popup_text,
-            group = "observations"
-          ) %>%
           addLegend(
             position = "bottomleft",
             colors = unname(species_colours[species_levels]),
             labels = unname(pretty_species[species_levels]),
-            title = "Dominant species"
+            title = "Species proportion"
           )
         
       } else {
@@ -976,7 +1195,7 @@ server <- function(input, output, session) {
     if (input$story_step == "Step 1: Meet the parrots") {
       div(
         div(class = "selected-title", "How to read Step 1"),
-        div(class = "small-note", "The map introduces the three species. In All mode, each symbol is a proportional symbol for total observations and is coloured by the dominant species in that LGA.")
+        div(class = "small-note", "The map introduces the three species. In All mode, each symbol is a proportional symbol for total observations and is divided by the three species' observation proportions in that LGA.")
       )
     } else if (input$story_step == "Step 2: Where and when?") {
       div(
@@ -1005,10 +1224,16 @@ server <- function(input, output, session) {
       p <- species_summary %>%
         mutate(
           species_label = pretty_species[species],
+          species_label_short = case_when(
+            species == "Cacatua galerita" ~ "Cacatua\ngalerita",
+            species == "Trichoglossus moluccanus" ~ "Trichoglossus\nmoluccanus",
+            species == "Eolophus roseicapilla" ~ "Eolophus\nroseicapilla",
+            TRUE ~ pretty_species[species]
+          ),
           species_colour = unname(species_colours[species])
         ) %>%
         ggplot(aes(
-          x = reorder(species_label, total_observations),
+          x = reorder(species_label_short, -total_observations),
           y = total_observations,
           fill = species,
           text = paste0(
@@ -1017,21 +1242,27 @@ server <- function(input, output, session) {
             "<br>Main state: ", main_state
           )
         )) +
-        geom_col(width = 0.6) +
-        coord_flip() +
+        geom_col(width = 0.55) +
         scale_fill_manual(values = species_colours) +
         labs(
           x = NULL,
           y = "Total observations",
           title = "Total observations by species"
         ) +
-        theme_minimal(base_size = 11) +
+        theme_minimal(base_size = 9) +
         theme(
           legend.position = "none",
-          plot.title = element_text(size = 13, face = "bold")
+          plot.title = element_text(size = 10, face = "bold"),
+          axis.text.x = element_text(size = 8),
+          axis.title.y = element_text(size = 9),
+          axis.title.x = element_text(size = 9)
         )
       
-      ggplotly(p, tooltip = "text")
+      ggplotly(p, tooltip = "text") %>%
+        layout(
+          title = list(font = list(size = 11)),
+          margin = list(l = 45, r = 8, t = 35, b = 95)
+        )
       
     } else if (input$story_step == "Step 2: Where and when?") {
       
@@ -1081,14 +1312,18 @@ server <- function(input, output, session) {
           title = "Monthly observation pattern",
           colour = "Species"
         ) +
-        theme_minimal(base_size = 11) +
+        theme_minimal(base_size = 10) +
         theme(
-          plot.title = element_text(size = 13, face = "bold"),
+          plot.title = element_text(size = 10, face = "bold"),
           legend.position = "bottom",
           legend.title = element_blank()
         )
       
-      ggplotly(p, tooltip = "text")
+      ggplotly(p, tooltip = "text") %>%
+        layout(
+          title = list(font = list(size = 11)),
+          margin = list(l = 45, r = 8, t = 35, b = 65)
+        )
       
     } else if (input$story_step == "Step 3: Human density") {
       
@@ -1181,13 +1416,17 @@ server <- function(input, output, session) {
           y = "Observation count, log scale",
           title = "Human density vs observation count"
         ) +
-        theme_minimal(base_size = 11) +
+        theme_minimal(base_size = 10) +
         theme(
-          plot.title = element_text(size = 13, face = "bold"),
+          plot.title = element_text(size = 10, face = "bold"),
           legend.position = "none"
         )
       
-      ggplotly(p, tooltip = "text")
+      ggplotly(p, tooltip = "text") %>%
+        layout(
+          title = list(font = list(size = 11)),
+          margin = list(l = 45, r = 8, t = 35, b = 55)
+        )
       
     } else {
       
@@ -1327,9 +1566,9 @@ server <- function(input, output, session) {
           fill = "Observations",
           title = "Observation heatmap by density and light"
         ) +
-        theme_minimal(base_size = 11) +
+        theme_minimal(base_size = 10) +
         theme(
-          plot.title = element_text(size = 13, face = "bold"),
+          plot.title = element_text(size = 10, face = "bold"),
           panel.grid = element_blank()
         )
       
@@ -1355,7 +1594,11 @@ server <- function(input, output, session) {
         }
       }
       
-      ggplotly(p, tooltip = "text")
+      ggplotly(p, tooltip = "text") %>%
+        layout(
+          title = list(font = list(size = 11)),
+          margin = list(l = 45, r = 8, t = 35, b = 55)
+        )
     }
   })
 }
