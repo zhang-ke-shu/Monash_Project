@@ -1,3 +1,5 @@
+# Required packages: shiny, dplyr, readr, tidyr, leaflet, ggplot2, plotly, sf
+# If needed, install them before running the app:
 # install.packages(c("shiny", "dplyr", "readr", "tidyr", "leaflet", "ggplot2", "plotly", "sf"))
 
 library(shiny)
