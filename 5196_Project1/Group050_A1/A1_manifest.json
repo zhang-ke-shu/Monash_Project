@@ -1,0 +1,27 @@
+{
+  "audience": "student-a1",
+  "files": [
+    {
+      "bytes": 1059,
+      "path": "README.md",
+      "sha256": "4900fbfe7e0a76dd6467a9a17361d1b960e2912b82fadf99dae42c887e0b9162"
+    },
+    {
+      "bytes": 11151,
+      "path": "public_data_dictionary.csv",
+      "sha256": "7f0520facc98a5b2759ad8ad475a231b0dce603bbff250c58a0b35af2c7c260c"
+    },
+    {
+      "bytes": 14227107,
+      "path": "raw_input/Group050_commerce.json",
+      "sha256": "7d0544352e6baf5f0110239529652e5517d50be37e8153a1c3102f9c920c0c47"
+    },
+    {
+      "bytes": 17878029,
+      "path": "raw_input/Group050_operations.xml",
+      "sha256": "64a9d1427c39b8188cfc6dcc188b4eb7e46c21d51652b4469e678c1a28cdfbcb"
+    }
+  ],
+  "group_alias": "Group050",
+  "manifest_schema_version": "1.1-public"
+}
