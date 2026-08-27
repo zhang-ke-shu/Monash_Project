@@ -1,3 +1,11 @@
 .DS_Store
 .ipynb_checkpoints/
-**/fit5202_2026_s2_dataset_v2/
+
+# FIT5202 Assignment 1 dataset
+5202_Project1/Ass1/fit5202_2026_s2_dataset_v2/
+
+# Jupyter and IPython runtime files
+5202_Project1/Ass1/.ipython/
+5202_Project1/Ass1/.jupyter/
+5202_Project1/Ass1/.local/
+5202_Project1/Ass1/.ipynb_checkpoints/
