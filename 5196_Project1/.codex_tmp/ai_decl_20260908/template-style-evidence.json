@@ -1,0 +1,170 @@
+{
+  "input": "C:\\monash\\Monash_Project\\5196_Project1\\Group050_A1\\templates\\A1_AI_use_declaration_template.docx",
+  "fonts_by_char_count": {
+    "Arial": 1284
+  },
+  "direct_run_formatting_runs": 48,
+  "direct_paragraph_formatting_paragraphs": 111,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 2,
+      "text": "FIT5196 Data Wrangling | A1 (15%) | Semester 2, 2026\n",
+      "style": "normal"
+    },
+    {
+      "para_index": 22,
+      "text": "Group Number: ________________",
+      "style": "normal"
+    },
+    {
+      "para_index": 23,
+      "text": "Submission: GroupNNN_A1_submission.zip and GroupNNN_EDA.pdf",
+      "style": "normal"
+    },
+    {
+      "para_index": 31,
+      "text": "AI Records and Verification",
+      "style": "normal"
+    },
+    {
+      "para_index": 33,
+      "text": "Conversational-AI index",
+      "style": "normal"
+    },
+    {
+      "para_index": 35,
+      "text": "Inline AI completion without chat history",
+      "style": "normal"
+    },
+    {
+      "para_index": 37,
+      "text": "Independent verification",
+      "style": "normal"
+    },
+    {
+      "para_index": 39,
+      "text": "Submission reminder",
+      "style": "normal"
+    },
+    {
+      "para_index": 41,
+      "text": "#",
+      "style": "normal"
+    },
+    {
+      "para_index": 42,
+      "text": "Full Name (printed)",
+      "style": "normal"
+    },
+    {
+      "para_index": 43,
+      "text": "Student ID",
+      "style": "normal"
+    },
+    {
+      "para_index": 44,
+      "text": "Signature",
+      "style": "normal"
+    },
+    {
+      "para_index": 45,
+      "text": "Date",
+      "style": "normal"
+    },
+    {
+      "para_index": 71,
+      "text": "Record ID",
+      "style": "normal"
+    },
+    {
+      "para_index": 72,
+      "text": "Member, tool/model and complete export filename",
+      "style": "normal"
+    },
+    {
+      "para_index": 73,
+      "text": "Purpose and affected submission file/section",
+      "style": "normal"
+    },
+    {
+      "para_index": 74,
+      "text": "Independent verification",
+      "style": "normal"
+    },
+    {
+      "para_index": 99,
+      "text": "Member and tool/editor",
+      "style": "normal"
+    },
+    {
+      "para_index": 100,
+      "text": "Affected files or functions",
+      "style": "normal"
+    },
+    {
+      "para_index": 101,
+      "text": "Nature of assistance",
+      "style": "normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "Generative AI Use Declaration",
+        "style": "Title"
+      },
+      {
+        "para_index": 2,
+        "text": "FIT5196 Data Wrangling | A1 (15%) | Semester 2, 2026\n",
+        "style": "normal"
+      },
+      {
+        "para_index": 4,
+        "text": "Important Notice",
+        "style": "Heading 2"
+      },
+      {
+        "para_index": 5,
+        "text": "If any group member used a generative AI or AI-assisted coding/writing tool, the group must:",
+        "style": "normal"
+      },
+      {
+        "para_index": 6,
+        "text": "Submit complete assignment-related conversation exports in English.",
+        "style": "normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 1,
+        "run_text": "Generative AI Use Declaration",
+        "style": "Title"
+      },
+      {
+        "para_index": 2,
+        "run_text": "FIT5196 Data Wrangling | A1 (15%) | Semester 2, 2026\n",
+        "style": "normal"
+      },
+      {
+        "para_index": 5,
+        "run_text": "If any group member used a generative AI or AI-assisted coding/writing tool, the",
+        "style": "normal"
+      },
+      {
+        "para_index": 6,
+        "run_text": "Submit complete assignment-related conversation exports in English.",
+        "style": "normal"
+      },
+      {
+        "para_index": 7,
+        "run_text": "Submit an English AI index recording the member/tool, export filename, purpose, ",
+        "style": "normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

@@ -1,0 +1,31 @@
+--- a
++++ b
+@@ -15,14 +15,16 @@
+ The group remains responsible for every submitted item, including AI-assisted work.
+ AI-assisted work was independently checked, the workflow runs offline, and each member can explain their contribution.
+ Signatures
+-Group Number: ________________
+-Submission: GroupNNN_A1_submission.zip and GroupNNN_EDA.pdf
++Group Number: Group050
++Submission: Group050_A1_submission.zip and Group050_EDA.pdf
+ #
+ Full Name (printed)
+ Student ID
+ Signature
+ Date
+ 1
++Keshu Zhang
++36436763
+ 2
+ 3
+ 4
+@@ -37,6 +39,9 @@
+ Purpose and affected submission file/section
+ Independent verification
+ AI-01
++Keshu ZhangOpenAI Codex (GPT-5)Keshu_Zhang_Codex_complete_export.pdf
++Support for my assigned Products/Product Reviews work: standardisation; Task 3.4 multilingual functions; Task 4 validation; Figures 7-8; Findings 9-10; and MLQ 4-5. Affected: Group050_solution.ipynb, Group050_text_functions.py, Group050_EDA.ipynb and report.
++Checked against the source files and data dictionary; public text-function tests and 20 scope validations passed; outputs were rerun offline; the 7,000-row Review-Product join had 0 orphans and 1.0 multiplication.
+ AI-02
+ AI-03
+ Inline AI completion without chat history
