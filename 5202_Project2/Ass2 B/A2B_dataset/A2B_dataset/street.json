@@ -1,0 +1,507 @@
+{
+"street": [
+	{
+		"streetid" : 5,
+		"streetname" : "A'BECKETT STREET"
+	},
+	{
+		"streetid" : 8,
+		"streetname" : "ACLAND STREET"
+	},
+	{
+		"streetid" : 11,
+		"streetname" : "AGNES STREET"
+	},
+	{
+		"streetid" : 13,
+		"streetname" : "AIRLIE STREET"
+	},
+	{
+		"streetid" : 16,
+		"streetname" : "ALBERT STREET"
+	},
+	{
+		"streetid" : 33,
+		"streetname" : "ANTHONY STREET"
+	},
+	{
+		"streetid" : 36,
+		"streetname" : "AQUITANIA WAY"
+	},
+	{
+		"streetid" : 48,
+		"streetname" : "AUGUSTA AVENUE"
+	},
+	{
+		"streetid" : 49,
+		"streetname" : "AURORA LANE"
+	},
+	{
+		"streetid" : 60,
+		"streetname" : "BALSTON STREET"
+	},
+	{
+		"streetid" : 78,
+		"streetname" : "BATMAN STREET"
+	},
+	{
+		"streetid" : 79,
+		"streetname" : "BATMANS HILL DRIVE"
+	},
+	{
+		"streetid" : 104,
+		"streetname" : "BERRY STREET"
+	},
+	{
+		"streetid" : 116,
+		"streetname" : "BOND STREET"
+	},
+	{
+		"streetid" : 123,
+		"streetname" : "BOURKE STREET"
+	},
+	{
+		"streetid" : 131,
+		"streetname" : "BRENTANI WAY"
+	},
+	{
+		"streetid" : 163,
+		"streetname" : "CAPEL STREET"
+	},
+	{
+		"streetid" : 164,
+		"streetname" : "CARAVEL LANE"
+	},
+	{
+		"streetid" : 178,
+		"streetname" : "CATHEDRAL PLACE"
+	},
+	{
+		"streetid" : 189,
+		"streetname" : "CHARLES STREET"
+	},
+	{
+		"streetid" : 192,
+		"streetname" : "CHETWYND STREET"
+	},
+	{
+		"streetid" : 200,
+		"streetname" : "CHURCH STREET"
+	},
+	{
+		"streetid" : 202,
+		"streetname" : "CITY ROAD"
+	},
+	{
+		"streetid" : 511,
+		"streetname" : "CLARENDON STREET"
+	},
+	{
+		"streetid" : 517,
+		"streetname" : "CLOWES STREET"
+	},
+	{
+		"streetid" : 520,
+		"streetname" : "COBDEN STREET"
+	},
+	{
+		"streetid" : 528,
+		"streetname" : "COLLINS STREET"
+	},
+	{
+		"streetid" : 547,
+		"streetname" : "COVENTRY STREET"
+	},
+	{
+		"streetid" : 558,
+		"streetname" : "CUMBERLAND STREET"
+	},
+	{
+		"streetid" : 562,
+		"streetname" : "CURZON STREET"
+	},
+	{
+		"streetid" : 585,
+		"streetname" : "DEVENEY STREET"
+	},
+	{
+		"streetid" : 590,
+		"streetname" : "DOCKLANDS DRIVE"
+	},
+	{
+		"streetid" : 591,
+		"streetname" : "DODDS STREET"
+	},
+	{
+		"streetid" : 592,
+		"streetname" : "DOEPEL WAY"
+	},
+	{
+		"streetid" : 597,
+		"streetname" : "DORCAS STREET"
+	},
+	{
+		"streetid" : 612,
+		"streetname" : "DRYBURGH STREET"
+	},
+	{
+		"streetid" : 614,
+		"streetname" : "DUDLEY STREET"
+	},
+	{
+		"streetid" : 617,
+		"streetname" : "EADES PLACE"
+	},
+	{
+		"streetid" : 618,
+		"streetname" : "EADES STREET"
+	},
+	{
+		"streetid" : 627,
+		"streetname" : "ELIZABETH STREET"
+	},
+	{
+		"streetid" : 638,
+		"streetname" : "ENTERPRIZE WAY"
+	},
+	{
+		"streetid" : 641,
+		"streetname" : "ERROL STREET"
+	},
+	{
+		"streetid" : 647,
+		"streetname" : "EXHIBITION STREET"
+	},
+	{
+		"streetid" : 651,
+		"streetname" : "FAIRLIE COURT"
+	},
+	{
+		"streetid" : 655,
+		"streetname" : "FARADAY STREET"
+	},
+	{
+		"streetid" : 656,
+		"streetname" : "FAWKNER STREET"
+	},
+	{
+		"streetid" : 669,
+		"streetname" : "FLINDERS LANE"
+	},
+	{
+		"streetid" : 670,
+		"streetname" : "FLINDERS STREET"
+	},
+	{
+		"streetid" : 679,
+		"streetname" : "FRANCIS STREET"
+	},
+	{
+		"streetid" : 681,
+		"streetname" : "FRANKLIN STREET"
+	},
+	{
+		"streetid" : 697,
+		"streetname" : "GEOGRAPHE STREET"
+	},
+	{
+		"streetid" : 701,
+		"streetname" : "GEORGIANA STREET"
+	},
+	{
+		"streetid" : 706,
+		"streetname" : "GISBORNE STREET"
+	},
+	{
+		"streetid" : 728,
+		"streetname" : "GRANT STREET"
+	},
+	{
+		"streetid" : 753,
+		"streetname" : "HARBOUR ESPLANADE"
+	},
+	{
+		"streetid" : 798,
+		"streetname" : "HOWARD STREET"
+	},
+	{
+		"streetid" : 810,
+		"streetname" : "IMPORT LANE"
+	},
+	{
+		"streetid" : 818,
+		"streetname" : "JEFFCOTT STREET"
+	},
+	{
+		"streetid" : 821,
+		"streetname" : "JOLIMONT ROAD"
+	},
+	{
+		"streetid" : 822,
+		"streetname" : "JOLIMONT STREET"
+	},
+	{
+		"streetid" : 823,
+		"streetname" : "JOLIMONT TERRACE"
+	},
+	{
+		"streetid" : 826,
+		"streetname" : "KARLSRUHE LANE"
+	},
+	{
+		"streetid" : 828,
+		"streetname" : "KAVANAGH STREET"
+	},
+	{
+		"streetid" : 839,
+		"streetname" : "KING STREET"
+	},
+	{
+		"streetid" : 856,
+		"streetname" : "LA TROBE STREET"
+	},
+	{
+		"streetid" : 869,
+		"streetname" : "LANSDOWNE STREET"
+	},
+	{
+		"streetid" : 880,
+		"streetname" : "LEVEN AVENUE"
+	},
+	{
+		"streetid" : 881,
+		"streetname" : "LEVESON STREET"
+	},
+	{
+		"streetid" : 894,
+		"streetname" : "LONSDALE STREET"
+	},
+	{
+		"streetid" : 907,
+		"streetname" : "LITTLE BOURKE STREET"
+	},
+	{
+		"streetid" : 911,
+		"streetname" : "LITTLE COLLINS STREET"
+	},
+	{
+		"streetid" : 915,
+		"streetname" : "LITTLE DOCKLANDS DRIVE"
+	},
+	{
+		"streetid" : 917,
+		"streetname" : "LITTLE DRYBURGH STREET SOUTH"
+	},
+	{
+		"streetid" : 926,
+		"streetname" : "LITTLE LONSDALE STREET"
+	},
+	{
+		"streetid" : 941,
+		"streetname" : "MACKENZIE STREET"
+	},
+	{
+		"streetid" : 957,
+		"streetname" : "MARKET STREET"
+	},
+	{
+		"streetid" : 974,
+		"streetname" : "MCCRAE STREET"
+	},
+	{
+		"streetid" : 998,
+		"streetname" : "MERCHANT STREET"
+	},
+	{
+		"streetid" : 1007,
+		"streetname" : "MILES STREET"
+	},
+	{
+		"streetid" : 1043,
+		"streetname" : "NAVIGATION DRIVE"
+	},
+	{
+		"streetid" : 1054,
+		"streetname" : "NICHOLSON STREET"
+	},
+	{
+		"streetid" : 1062,
+		"streetname" : "O'CONNELL STREET"
+	},
+	{
+		"streetid" : 1078,
+		"streetname" : "PALMER STREET"
+	},
+	{
+		"streetid" : 1090,
+		"streetname" : "PARLIAMENT PLACE"
+	},
+	{
+		"streetid" : 1097,
+		"streetname" : "PEARL RIVER ROAD"
+	},
+	{
+		"streetid" : 1101,
+		"streetname" : "PEEL STREET"
+	},
+	{
+		"streetid" : 1102,
+		"streetname" : "PELHAM STREET"
+	},
+	{
+		"streetid" : 1157,
+		"streetname" : "PRINCESS STREET"
+	},
+	{
+		"streetid" : 1171,
+		"streetname" : "QUEEN STREET"
+	},
+	{
+		"streetid" : 1175,
+		"streetname" : "QUEENSBERRY STREET"
+	},
+	{
+		"streetid" : 1183,
+		"streetname" : "RAKAIA WAY"
+	},
+	{
+		"streetid" : 1214,
+		"streetname" : "ROSSLYN STREET"
+	},
+	{
+		"streetid" : 1218,
+		"streetname" : "ROYAL PARADE"
+	},
+	{
+		"streetid" : 1221,
+		"streetname" : "RUSSELL STREET"
+	},
+	{
+		"streetid" : 1227,
+		"streetname" : "SAINT MANGOS LANE"
+	},
+	{
+		"streetid" : 1228,
+		"streetname" : "SAINT MANGOS LANE NORTH"
+	},
+	{
+		"streetid" : 1241,
+		"streetname" : "SEAFARER LANE"
+	},
+	{
+		"streetid" : 1254,
+		"streetname" : "SIMPSON STREET"
+	},
+	{
+		"streetid" : 1278,
+		"streetname" : "SOUTHBANK BOULEVARD"
+	},
+	{
+		"streetid" : 1285,
+		"streetname" : "SPENCER STREET"
+	},
+	{
+		"streetid" : 1288,
+		"streetname" : "SPRING STREET"
+	},
+	{
+		"streetid" : 1290,
+		"streetname" : "ST ANDREWS PLACE"
+	},
+	{
+		"streetid" : 1294,
+		"streetname" : "ST KILDA ROAD"
+	},
+	{
+		"streetid" : 1295,
+		"streetname" : "ST LEONARDS COURT"
+	},
+	{
+		"streetid" : 1299,
+		"streetname" : "STANLEY STREET"
+	},
+	{
+		"streetid" : 1323,
+		"streetname" : "STURT STREET"
+	},
+	{
+		"streetid" : 1329,
+		"streetname" : "SWANSTON STREET"
+	},
+	{
+		"streetid" : 1346,
+		"streetname" : "THERRY STREET"
+	},
+	{
+		"streetid" : 1373,
+		"streetname" : "VALE STREET"
+	},
+	{
+		"streetid" : 1374,
+		"streetname" : "VALE STREET SOUTH"
+	},
+	{
+		"streetid" : 1379,
+		"streetname" : "VICTORIA PARADE"
+	},
+	{
+		"streetid" : 1381,
+		"streetname" : "VICTORIA STREET"
+	},
+	{
+		"streetid" : 1383,
+		"streetname" : "VILLAGE STREET"
+	},
+	{
+		"streetid" : 1391,
+		"streetname" : "WALSH STREET"
+	},
+	{
+		"streetid" : 1398,
+		"streetname" : "WATERFRONT WAY"
+	},
+	{
+		"streetid" : 1400,
+		"streetname" : "WATERVIEW WALK"
+	},
+	{
+		"streetid" : 1405,
+		"streetname" : "WATTLE ROAD"
+	},
+	{
+		"streetid" : 1413,
+		"streetname" : "WELLINGTON PARADE"
+	},
+	{
+		"streetid" : 1414,
+		"streetname" : "WELLINGTON PARADE SOUTH"
+	},
+	{
+		"streetid" : 1416,
+		"streetname" : "WELLS STREET"
+	},
+	{
+		"streetid" : 1428,
+		"streetname" : "WILLIAM STREET"
+	},
+	{
+		"streetid" : 1433,
+		"streetname" : "WILLS STREET"
+	},
+	{
+		"streetid" : 1439,
+		"streetname" : "WITCHWOOD CLOSE"
+	},
+	{
+		"streetid" : 1457,
+		"streetname" : "FISHPLATE LANE"
+	},
+	{
+		"streetid" : 1460,
+		"streetname" : "MARMION PLACE"
+	},
+	{
+		"streetid" : 1497,
+		"streetname" : "VEGEMITE WAY"
+	}
+]}

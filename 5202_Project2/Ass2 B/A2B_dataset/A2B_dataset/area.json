@@ -1,0 +1,155 @@
+{
+"area": [
+	{
+		"areaid" : 1,
+		"areaname" : "County"
+	},
+	{
+		"areaid" : 2,
+		"areaname" : "Tavistock"
+	},
+	{
+		"areaid" : 3,
+		"areaname" : "Banks"
+	},
+	{
+		"areaid" : 4,
+		"areaname" : "Mint"
+	},
+	{
+		"areaid" : 5,
+		"areaname" : "Domain"
+	},
+	{
+		"areaid" : 6,
+		"areaname" : "Titles"
+	},
+	{
+		"areaid" : 7,
+		"areaname" : ""
+	},
+	{
+		"areaid" : 8,
+		"areaname" : "McKillop"
+	},
+	{
+		"areaid" : 9,
+		"areaname" : "Windsor"
+	},
+	{
+		"areaid" : 10,
+		"areaname" : "Kensington"
+	},
+	{
+		"areaid" : 11,
+		"areaname" : "Library"
+	},
+	{
+		"areaid" : 12,
+		"areaname" : "Markilles"
+	},
+	{
+		"areaid" : 13,
+		"areaname" : "Princes Theatre"
+	},
+	{
+		"areaid" : 14,
+		"areaname" : "Spencer"
+	},
+	{
+		"areaid" : 15,
+		"areaname" : "University"
+	},
+	{
+		"areaid" : 16,
+		"areaname" : "Queensberry"
+	},
+	{
+		"areaid" : 17,
+		"areaname" : "The Mac"
+	},
+	{
+		"areaid" : 18,
+		"areaname" : "West Melbourne"
+	},
+	{
+		"areaid" : 19,
+		"areaname" : "Rialto"
+	},
+	{
+		"areaid" : 20,
+		"areaname" : "Courtney"
+	},
+	{
+		"areaid" : 21,
+		"areaname" : "Twin Towers"
+	},
+	{
+		"areaid" : 22,
+		"areaname" : "City Square"
+	},
+	{
+		"areaid" : 23,
+		"areaname" : "All"
+	},
+	{
+		"areaid" : 24,
+		"areaname" : "Jolimont"
+	},
+	{
+		"areaid" : 25,
+		"areaname" : "Supreme"
+	},
+	{
+		"areaid" : 26,
+		"areaname" : "Hardware"
+	},
+	{
+		"areaid" : 27,
+		"areaname" : "Victoria Market"
+	},
+	{
+		"areaid" : 28,
+		"areaname" : "Degraves"
+	},
+	{
+		"areaid" : 29,
+		"areaname" : "Hyatt"
+	},
+	{
+		"areaid" : 30,
+		"areaname" : "East Melbourne"
+	},
+	{
+		"areaid" : 31,
+		"areaname" : "Magistrates"
+	},
+	{
+		"areaid" : 32,
+		"areaname" : "RACV"
+	},
+	{
+		"areaid" : 33,
+		"areaname" : "Regency"
+	},
+	{
+		"areaid" : 34,
+		"areaname" : "Drummond"
+	},
+	{
+		"areaid" : 35,
+		"areaname" : "Docklands"
+	},
+	{
+		"areaid" : 36,
+		"areaname" : "Family"
+	},
+	{
+		"areaid" : 37,
+		"areaname" : "Chinatown"
+	},
+	{
+		"areaid" : 38,
+		"areaname" : "Southbank"
+	}
+]}
