@@ -9,3 +9,23 @@
 5202_Project1/Ass1/.jupyter/
 5202_Project1/Ass1/.local/
 5202_Project1/Ass1/.ipynb_checkpoints/
+
+# FIT5202 Assignment 2 large local datasets and archives
+5202_Project2/Ass2 A/A2A_dataset.zip
+5202_Project2/Ass2 A/A2A_dataset/a2a_traffic_data.csv
+5202_Project2/Ass2 A/A2A_dataset/a2a_parking_sensor.csv
+5202_Project2/Ass2 B/A2B_dataset.zip
+5202_Project2/Ass2 B/A2B_dataset/A2B_dataset/streaming_traffic_data.csv
+5202_Project2/Ass2 B/A2B_dataset/A2B_dataset/streaming_parking_bays.csv
+
+# FIT5202 Assignment 2 generated/runtime files
+5202_Project2/**/.ipynb_checkpoints/
+5202_Project2/**/__MACOSX/
+5202_Project2/**/.DS_Store
+5202_Project2/**/__pycache__/
+5202_Project2/**/checkpoint*/
+5202_Project2/**/spark-warehouse/
+5202_Project2/**/metastore_db/
+5202_Project2/**/derby.log
+5202_Project2/**/*.log
+5202_Project2/Ass2 A/models/
